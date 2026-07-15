@@ -216,7 +216,7 @@ export default function Hero() {
               <a href="#download" className="flex items-center justify-center px-8 py-4 text-base font-semibold rounded-full text-brand-dark bg-white hover:bg-gray-50 md:text-lg transition duration-300 transform hover:scale-105 shadow-lg">
                 Uygulamayı İndir
               </a>
-              <Link to="/business" className="flex items-center justify-center px-8 py-4 border-2 border-white/80 text-base font-semibold rounded-full text-white bg-transparent hover:bg-white hover:text-brand-dark md:text-lg transition duration-300 transform hover:scale-105">
+              <Link to="/business" state={{ mode: 'register' }} className="flex items-center justify-center px-8 py-4 border-2 border-white/80 text-base font-semibold rounded-full text-white bg-transparent hover:bg-white hover:text-brand-dark md:text-lg transition duration-300 transform hover:scale-105">
                 İşletmeni Kaydet
               </Link>
             </motion.div>

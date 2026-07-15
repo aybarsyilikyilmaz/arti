@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { turkeyZones } from '../data/turkey_zones';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -111,6 +111,17 @@ export default function BusinessAuth() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [stepError, setStepError] = useState(null);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.mode === 'register') {
+      setIsLogin(false);
+      setStep(0);
+    } else if (location.state?.mode === 'login') {
+      setIsLogin(true);
+    }
+  }, [location.state]);
 
   const [formData, setFormData] = useState({
     // Adım 1 — İşletme profili

@@ -151,9 +151,9 @@ function App() {
               {!isBusinessPage && (
                 <>
                   <div className="hidden lg:flex items-center space-x-4">
-                    <Link to="/business" className={`${textColor} ${hoverColor} transition`}>İşletme kaydı</Link>
+                    <Link to="/business" state={{ mode: 'register' }} className={`${textColor} ${hoverColor} transition`}>İşletme kaydı</Link>
                     <span className={`${dividerColor} transition-colors`}>|</span>
-                    <Link to="/business" className={`${textColor} ${hoverColor} transition`}>Mağaza girişi</Link>
+                    <Link to="/business" state={{ mode: 'login' }} className={`${textColor} ${hoverColor} transition`}>Mağaza girişi</Link>
                   </div>
                   <a href="#download" className={`${btnStyle} px-5 py-2.5 rounded-full font-medium transition whitespace-nowrap`}>
                     Uygulamayı indir
