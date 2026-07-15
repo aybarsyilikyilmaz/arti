@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import Hero from './components/Hero';
 import InfoSection from './components/InfoSection';
 import BusinessAuth from './components/BusinessAuth';
@@ -63,6 +63,9 @@ function LogoIcon({ className }) {
 }
 
 function App() {
+  const location = useLocation();
+  const isBusinessPage = location.pathname.startsWith('/business');
+  
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDarkHeader, setIsDarkHeader] = useState(true);
 
@@ -101,8 +104,8 @@ function App() {
   const dividerColor = useWhiteText ? 'text-white/40' : 'text-gray-300';
 
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Navigation Bar */}
       <nav className={`fixed w-full top-0 z-50 transition-all duration-300 ${
         !isScrolled 
@@ -116,35 +119,49 @@ function App() {
             
             {/* Left Side */}
             <div className="flex items-center space-x-6 flex-1">
-              <Link to="/" className={`flex items-center space-x-1.5 ${textColor} ${hoverColor} transition font-normal text-[15px]`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <span>Çevrendekiler</span>
-              </Link>
-              <Link to="/" className={`${textColor} ${hoverColor} transition font-normal text-[15px] hidden md:block`}>Hakkımızda</Link>
-              <Link to="/business" className={`${textColor} ${hoverColor} transition font-normal text-[15px] hidden md:block`}>İşletme</Link>
+              {isBusinessPage ? (
+                <Link to="/" className={`flex items-center space-x-1.5 ${textColor} ${hoverColor} transition font-normal text-[15px]`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  <span>Anasayfaya Dön</span>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/" className={`flex items-center space-x-1.5 ${textColor} ${hoverColor} transition font-normal text-[15px]`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <span>Çevrendekiler</span>
+                  </Link>
+                  <Link to="/" className={`${textColor} ${hoverColor} transition font-normal text-[15px] hidden md:block`}>Hakkımızda</Link>
+                  <Link to="/business" className={`${textColor} ${hoverColor} transition font-normal text-[15px] hidden md:block`}>İşletme</Link>
+                </>
+              )}
             </div>
 
             {/* Center Logo */}
             <div className="flex justify-center flex-1">
-              <Link to="/" className={`${logoColor} flex items-center justify-center gap-1.5 transition-colors`} aria-label="Anasayfa">
-                <LogoIcon className="h-9 w-auto" />
-                <span className="font-logo italic font-semibold text-3xl tracking-wide pt-0.5 select-none">Artı</span>
+              <Link to="/" className={`${logoColor} flex items-center justify-center transition-colors`} aria-label="Anasayfa">
+                <LogoIcon className="h-10 w-auto" />
               </Link>
             </div>
 
             {/* Right Side */}
             <div className="flex items-center justify-end space-x-5 flex-1 text-[15px] font-normal">
-              <div className="hidden lg:flex items-center space-x-4">
-                <Link to="/business" className={`${textColor} ${hoverColor} transition`}>İşletme kaydı</Link>
-                <span className={`${dividerColor} transition-colors`}>|</span>
-                <Link to="/business" className={`${textColor} ${hoverColor} transition`}>Mağaza girişi</Link>
-              </div>
-              <a href="#download" className={`${btnStyle} px-5 py-2.5 rounded-full font-medium transition whitespace-nowrap`}>
-                Uygulamayı indir
-              </a>
-              <button className={`${textColor} ${hoverColor} transition hidden sm:block font-medium`}>TR</button>
+              {!isBusinessPage && (
+                <>
+                  <div className="hidden lg:flex items-center space-x-4">
+                    <Link to="/business" className={`${textColor} ${hoverColor} transition`}>İşletme kaydı</Link>
+                    <span className={`${dividerColor} transition-colors`}>|</span>
+                    <Link to="/business" className={`${textColor} ${hoverColor} transition`}>Mağaza girişi</Link>
+                  </div>
+                  <a href="#download" className={`${btnStyle} px-5 py-2.5 rounded-full font-medium transition whitespace-nowrap`}>
+                    Uygulamayı indir
+                  </a>
+                  <button className={`${textColor} ${hoverColor} transition hidden sm:block font-medium`}>TR</button>
+                </>
+              )}
             </div>
 
           </div>
@@ -160,9 +177,8 @@ function App() {
         </main>
 
         {/* Footer */}
-        <Footer />
+        {!isBusinessPage && <Footer />}
       </div>
-    </Router>
   );
 }
 

@@ -250,9 +250,8 @@ export default function BusinessAuth() {
   return (
     <div className="min-h-[85vh] bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md flex flex-col items-center">
-        <Link to="/" className="flex items-center justify-center gap-1.5 text-brand hover:opacity-90 transition-opacity mb-2">
-          <LogoIcon className="h-10 w-auto" />
-          <span className="font-logo italic font-semibold text-3.5xl tracking-wide pt-0.5 select-none text-brand">Artı</span>
+        <Link to="/" className="flex items-center justify-center text-brand hover:opacity-90 transition-opacity mb-2" aria-label="Anasayfa">
+          <LogoIcon className="h-12 w-auto" />
         </Link>
         <h2 className="mt-4 text-center text-3xl font-extrabold text-gray-900 tracking-tight">
           {isLogin ? 'İşletme Hesabınıza Giriş Yapın' : 'İşletmenizi Kaydedin'}
