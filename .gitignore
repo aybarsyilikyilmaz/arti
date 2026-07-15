@@ -34,3 +34,7 @@ yarn-error.log*
 .claudeignore
 .gemini/
 antigravity/
+
+# Local helper scripts
+*.py
+
