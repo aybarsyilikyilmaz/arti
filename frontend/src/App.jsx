@@ -93,7 +93,7 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const useWhiteText = !isScrolled || isDarkHeader;
+  const useWhiteText = (!isScrolled || isDarkHeader) && !isBusinessPage;
 
   const textColor = useWhiteText ? 'text-white' : 'text-gray-800';
   const hoverColor = useWhiteText ? 'hover:text-green-200' : 'hover:text-brand';
@@ -102,15 +102,18 @@ function App() {
     ? 'bg-white text-brand-dark hover:bg-gray-100' 
     : 'bg-gray-900 text-white hover:bg-gray-800';
   const dividerColor = useWhiteText ? 'text-white/40' : 'text-gray-300';
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Navigation Bar */}
       <nav className={`fixed w-full top-0 z-50 transition-all duration-300 ${
-        !isScrolled 
-          ? 'bg-transparent' 
-          : isDarkHeader 
-            ? 'bg-brand-dark/30 backdrop-blur-md border-b border-white/10' 
-            : 'bg-white/90 backdrop-blur-md border-b border-gray-200'
+        isBusinessPage
+          ? 'bg-white/90 backdrop-blur-md border-b border-gray-200'
+          : !isScrolled 
+            ? 'bg-transparent' 
+            : isDarkHeader 
+              ? 'bg-brand-dark/30 backdrop-blur-md border-b border-white/10' 
+              : 'bg-white/90 backdrop-blur-md border-b border-gray-200'
       }`}>
         <div className="px-4 sm:px-6 lg:px-12">
           <div className="flex items-center justify-between h-16">
