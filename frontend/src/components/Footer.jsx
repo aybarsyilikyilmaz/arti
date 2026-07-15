@@ -57,13 +57,6 @@ export default function Footer() {
     <footer className="bg-white text-gray-600 border-t border-gray-100">
       {/* Üst bant: linkler + sosyal + mağaza rozetleri */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <Link to="/" className="absolute left-4 sm:left-6 lg:left-8 top-12 hidden md:block">
-          <div className="bg-brand text-white px-4 py-2 rounded-xl font-black tracking-wider text-base flex items-center justify-center gap-0.5 shadow-sm hover:bg-brand-dark transition-colors duration-200">
-            <span>ARTI</span>
-            <span className="text-white">+</span>
-          </div>
-        </Link>
-
         <div className="flex flex-col items-center gap-8">
           <nav className="flex flex-wrap justify-center gap-x-10 gap-y-3">
             {topLinks.map((l) => (
