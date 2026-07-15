@@ -14,7 +14,45 @@ const legalLinks = ['Yasal', 'Gizlilik Politikası', 'Çerez Politikası', 'Şar
 
 const socials = [Linkedin, Instagram, Facebook, Youtube, Twitter];
 
+// Spring and stagger animation orchestration for the letters
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12, // Stagger delays from left to right (A -> R -> T -> I)
+      delayChildren: 0.15
+    }
+  }
+};
+
+const letterVariants = {
+  hidden: { 
+    opacity: 0, 
+    y: 120, 
+    rotateY: 85,
+    rotateZ: -8,
+    scale: 0.35,
+    transformOrigin: "bottom center"
+  },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    rotateY: 0,
+    rotateZ: 0,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 85,
+      damping: 11, // Fun bouncy spring reaction
+      mass: 0.85
+    }
+  }
+};
+
 export default function Footer() {
+  const logoWord = "ARTI";
+
   return (
     <footer className="bg-white text-gray-600 border-t border-gray-100">
       {/* Üst bant: linkler + sosyal + mağaza rozetleri */}
@@ -65,16 +103,26 @@ export default function Footer() {
       {/* Alt bant: scroll ile beliren dev marka yazısı ve tüm alt yasal bilgiler (Komple Anasayfa Yeşili) */}
       <div className="bg-brand-dark overflow-hidden text-brand-light">
         <div className="max-w-[100rem] mx-auto px-2">
-          <motion.p
-            initial={{ y: '35%', opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
+          {/* 3D Perspective container holding individual animated letters */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
             viewport={{ once: true, amount: 0.35 }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-            className="text-center font-extrabold tracking-tighter leading-none text-white select-none whitespace-nowrap text-[19vw] pt-6"
-            aria-hidden="true"
+            className="flex justify-center select-none whitespace-nowrap text-[19vw] font-extrabold tracking-tighter leading-none pt-6 text-white"
+            style={{ perspective: '1000px' }}
           >
-            ARTI
-          </motion.p>
+            {logoWord.split("").map((char, index) => (
+              <motion.span
+                key={index}
+                variants={letterVariants}
+                className="inline-block"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                {char}
+              </motion.span>
+            ))}
+          </motion.div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 pt-4">
