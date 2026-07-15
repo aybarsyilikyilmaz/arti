@@ -10,9 +10,9 @@ export default function InfoSection() {
 
   // Smooth out the raw scroll progress using spring physics for a luxurious, fluid slide feel
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 55, // Sweeping, elegant velocity
-    damping: 20,    // Absorb velocity smoothly without bouncing
-    mass: 0.8
+    stiffness: 35, // Sweeping, elegant velocity
+    damping: 22,    // Absorb velocity smoothly without bouncing
+    mass: 1.2
   });
 
   // Mathematically maps the scroll to slide each card precisely to the viewport center
@@ -48,7 +48,7 @@ export default function InfoSection() {
   return (
     <>
       {/* Horizontal Scroll Section (Huge Inc. style) */}
-      <div ref={containerRef} className="relative h-[250vh] bg-gray-50 border-t border-gray-100">
+      <div ref={containerRef} className="relative h-[350vh] bg-gray-50 border-t border-gray-100">
         {/* Sticky viewports container */}
         <div className="sticky top-0 h-screen overflow-hidden flex flex-col justify-between py-12 md:py-16">
           
