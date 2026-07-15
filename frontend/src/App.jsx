@@ -128,8 +128,9 @@ function App() {
 
             {/* Center Logo */}
             <div className="flex justify-center flex-1">
-              <Link to="/" className={`font-bold ${logoColor} flex items-center justify-center transition-colors`} aria-label="Anasayfa">
-                <LogoIcon className="h-10 w-auto" />
+              <Link to="/" className={`${logoColor} flex items-center justify-center gap-1.5 transition-colors`} aria-label="Anasayfa">
+                <LogoIcon className="h-9 w-auto" />
+                <span className="font-logo italic font-semibold text-3xl tracking-wide pt-0.5 select-none">Artı</span>
               </Link>
             </div>
 
