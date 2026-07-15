@@ -34,35 +34,27 @@ export default function Footer() {
     mass: 0.5
   });
 
-  // Letter 1: 'A'
-  const y0 = useTransform(smoothProgress, [0.0, 0.65], [160, 0]);
-  const x0 = useTransform(smoothProgress, [0.0, 0.75], [-140, 0]);
-  const r0 = useTransform(smoothProgress, [0.0, 0.75], [-45, 0]);
-  const o0 = useTransform(smoothProgress, [0.0, 0.45], [0, 1]);
+  // Letter 1: 'A' (Fades in first)
+  const y0 = useTransform(smoothProgress, [0.0, 0.55], [30, 0]);
+  const o0 = useTransform(smoothProgress, [0.0, 0.50], [0, 1]);
 
   // Letter 2: 'R'
-  const y1 = useTransform(smoothProgress, [0.1, 0.75], [180, 0]);
-  const x1 = useTransform(smoothProgress, [0.1, 0.85], [-40, 0]);
-  const r1 = useTransform(smoothProgress, [0.1, 0.85], [-20, 0]);
-  const o1 = useTransform(smoothProgress, [0.1, 0.55], [0, 1]);
+  const y1 = useTransform(smoothProgress, [0.15, 0.70], [30, 0]);
+  const o1 = useTransform(smoothProgress, [0.15, 0.65], [0, 1]);
 
   // Letter 3: 'T'
-  const y2 = useTransform(smoothProgress, [0.2, 0.85], [180, 0]);
-  const x2 = useTransform(smoothProgress, [0.2, 0.90], [40, 0]);
-  const r2 = useTransform(smoothProgress, [0.2, 0.90], [20, 0]);
-  const o2 = useTransform(smoothProgress, [0.2, 0.65], [0, 1]);
+  const y2 = useTransform(smoothProgress, [0.30, 0.85], [30, 0]);
+  const o2 = useTransform(smoothProgress, [0.30, 0.80], [0, 1]);
 
-  // Letter 4: 'I'
-  const y3 = useTransform(smoothProgress, [0.3, 0.95], [160, 0]);
-  const x3 = useTransform(smoothProgress, [0.3, 1.00], [140, 0]);
-  const r3 = useTransform(smoothProgress, [0.3, 1.00], [45, 0]);
-  const o3 = useTransform(smoothProgress, [0.3, 0.75], [0, 1]);
+  // Letter 4: 'I' (Fades in last)
+  const y3 = useTransform(smoothProgress, [0.45, 1.00], [30, 0]);
+  const o3 = useTransform(smoothProgress, [0.45, 0.95], [0, 1]);
 
   const letterTransforms = [
-    { y: y0, x: x0, rotate: r0, opacity: o0, char: 'A' },
-    { y: y1, x: x1, rotate: r1, opacity: o1, char: 'R' },
-    { y: y2, x: x2, rotate: r2, opacity: o2, char: 'T' },
-    { y: y3, x: x3, rotate: r3, opacity: o3, char: 'I' }
+    { y: y0, opacity: o0, char: 'A' },
+    { y: y1, opacity: o1, char: 'R' },
+    { y: y2, opacity: o2, char: 'T' },
+    { y: y3, opacity: o3, char: 'I' }
   ];
 
   useEffect(() => {
@@ -135,21 +127,16 @@ export default function Footer() {
       {/* Alt bant: scroll ile beliren dev marka yazısı ve tüm alt yasal bilgiler (Komple Anasayfa Yeşili) */}
       <div className="bg-brand-dark overflow-hidden text-brand-light">
         <div className="max-w-[100rem] mx-auto px-2">
-          {/* 3D Perspective container holding individual animated letters */}
+          {/* Simple and elegant fade-in container for individual letters */}
           <div
             className="flex justify-center select-none whitespace-nowrap text-[19vw] font-extrabold tracking-tighter leading-none pt-6 text-white"
-            style={{ perspective: '1000px' }}
           >
             {letterTransforms.map((lt, index) => (
               <motion.span
                 key={index}
                 style={{
                   y: lt.y,
-                  x: lt.x,
-                  rotate: lt.rotate,
-                  opacity: lt.opacity,
-                  transformStyle: 'preserve-3d',
-                  transformOrigin: 'bottom center'
+                  opacity: lt.opacity
                 }}
                 className="inline-block"
               >
