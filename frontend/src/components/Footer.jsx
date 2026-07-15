@@ -14,46 +14,59 @@ const legalLinks = ['Yasal', 'Gizlilik Politikası', 'Çerez Politikası', 'Şar
 
 const socials = [Linkedin, Instagram, Facebook, Youtube, Twitter];
 
-// Spring and stagger animation orchestration for the letters
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.12, // Stagger delays from left to right (A -> R -> T -> I)
-      delayChildren: 0.15
-    }
-  }
-};
 
-const letterVariants = {
-  hidden: { 
-    opacity: 0, 
-    y: 120, 
-    rotateY: 85,
-    rotateZ: -8,
-    scale: 0.35,
-    transformOrigin: "bottom center"
-  },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    rotateY: 0,
-    rotateZ: 0,
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 85,
-      damping: 11, // Fun bouncy spring reaction
-      mass: 0.85
-    }
-  }
-};
+
+import { useScroll, useTransform, useSpring, motion } from 'framer-motion';
 
 export default function Footer() {
   const logoWord = "ARTI";
   const footerRef = useRef(null);
+  const spacerRef = useRef(null);
   const [footerHeight, setFooterHeight] = useState(0);
+
+  // Track the scroll progress of the footer spacer in the document flow
+  const { scrollYProgress } = useScroll({
+    target: spacerRef,
+    offset: ["start end", "end end"]
+  });
+
+  // Smooth scroll progress using spring physics
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 85,
+    damping: 20,
+    mass: 0.5
+  });
+
+  // Letter 1: 'A'
+  const y0 = useTransform(smoothProgress, [0.0, 0.65], [160, 0]);
+  const x0 = useTransform(smoothProgress, [0.0, 0.75], [-140, 0]);
+  const r0 = useTransform(smoothProgress, [0.0, 0.75], [-45, 0]);
+  const o0 = useTransform(smoothProgress, [0.0, 0.45], [0, 1]);
+
+  // Letter 2: 'R'
+  const y1 = useTransform(smoothProgress, [0.1, 0.75], [180, 0]);
+  const x1 = useTransform(smoothProgress, [0.1, 0.85], [-40, 0]);
+  const r1 = useTransform(smoothProgress, [0.1, 0.85], [-20, 0]);
+  const o1 = useTransform(smoothProgress, [0.1, 0.55], [0, 1]);
+
+  // Letter 3: 'T'
+  const y2 = useTransform(smoothProgress, [0.2, 0.85], [180, 0]);
+  const x2 = useTransform(smoothProgress, [0.2, 0.90], [40, 0]);
+  const r2 = useTransform(smoothProgress, [0.2, 0.90], [20, 0]);
+  const o2 = useTransform(smoothProgress, [0.2, 0.65], [0, 1]);
+
+  // Letter 4: 'I'
+  const y3 = useTransform(smoothProgress, [0.3, 0.95], [160, 0]);
+  const x3 = useTransform(smoothProgress, [0.3, 1.00], [140, 0]);
+  const r3 = useTransform(smoothProgress, [0.3, 1.00], [45, 0]);
+  const o3 = useTransform(smoothProgress, [0.3, 0.75], [0, 1]);
+
+  const letterTransforms = [
+    { y: y0, x: x0, rotate: r0, opacity: o0, char: 'A' },
+    { y: y1, x: x1, rotate: r1, opacity: o1, char: 'R' },
+    { y: y2, x: x2, rotate: r2, opacity: o2, char: 'T' },
+    { y: y3, x: x3, rotate: r3, opacity: o3, char: 'I' }
+  ];
 
   useEffect(() => {
     if (!footerRef.current) return;
@@ -76,7 +89,7 @@ export default function Footer() {
   return (
     <>
       {/* Spacer that pushes page scroll flow to match the fixed footer height */}
-      <div style={{ height: footerHeight }} className="pointer-events-none w-full" />
+      <div ref={spacerRef} style={{ height: footerHeight }} className="pointer-events-none w-full" />
 
       {/* Fixed footer behind the page */}
       <footer 
@@ -126,25 +139,27 @@ export default function Footer() {
       <div className="bg-brand-dark overflow-hidden text-brand-light">
         <div className="max-w-[100rem] mx-auto px-2">
           {/* 3D Perspective container holding individual animated letters */}
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.35 }}
+          <div
             className="flex justify-center select-none whitespace-nowrap text-[19vw] font-extrabold tracking-tighter leading-none pt-6 text-white"
             style={{ perspective: '1000px' }}
           >
-            {logoWord.split("").map((char, index) => (
+            {letterTransforms.map((lt, index) => (
               <motion.span
                 key={index}
-                variants={letterVariants}
+                style={{
+                  y: lt.y,
+                  x: lt.x,
+                  rotate: lt.rotate,
+                  opacity: lt.opacity,
+                  transformStyle: 'preserve-3d',
+                  transformOrigin: 'bottom center'
+                }}
                 className="inline-block"
-                style={{ transformStyle: 'preserve-3d' }}
               >
-                {char}
+                {lt.char}
               </motion.span>
             ))}
-          </motion.div>
+          </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 pt-4">
