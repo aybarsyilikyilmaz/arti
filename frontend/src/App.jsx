@@ -102,8 +102,6 @@ function App() {
     ? 'bg-white text-brand-dark hover:bg-gray-100' 
     : 'bg-gray-900 text-white hover:bg-gray-800';
   const dividerColor = useWhiteText ? 'text-white/40' : 'text-gray-300';
-
-  return (
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Navigation Bar */}
