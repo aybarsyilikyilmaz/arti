@@ -62,23 +62,26 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Alt bant: scroll ile beliren dev marka yazısı */}
-      <div className="bg-white overflow-hidden border-t border-gray-100">
+      {/* Alt bant: scroll ile beliren dev marka yazısı (Koyu Yeşil Arka Plan, Beyaz Yazı) */}
+      <div className="bg-[#12241b] overflow-hidden">
         <div className="max-w-[100rem] mx-auto px-2">
           <motion.p
             initial={{ y: '35%', opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true, amount: 0.35 }}
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-            className="text-center font-extrabold tracking-tighter leading-none text-brand select-none whitespace-nowrap text-[19vw] pt-6"
+            className="text-center font-extrabold tracking-tighter leading-none text-white select-none whitespace-nowrap text-[19vw] pt-6"
             aria-hidden="true"
           >
             ARTI
           </motion.p>
         </div>
+      </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
-          <nav className="flex flex-wrap justify-center gap-x-10 gap-y-3 pt-2 pb-6">
+      {/* En alt kısım: Yasal Linkler & Telif Hakkı (Beyaz Arka Plan, Koyu Yazı) */}
+      <div className="bg-white border-t border-gray-100 py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex flex-wrap justify-center gap-x-10 gap-y-3 pb-6">
             {legalLinks.map((l) => (
               <a key={l} href="#" className="text-sm text-gray-500 hover:text-brand transition-colors">
                 {l}
