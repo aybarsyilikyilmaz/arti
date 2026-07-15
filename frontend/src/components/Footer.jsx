@@ -62,8 +62,8 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Alt bant: scroll ile beliren dev marka yazısı (Koyu Yeşil Arka Plan, Beyaz Yazı) */}
-      <div className="bg-[#12241b] overflow-hidden">
+      {/* Alt bant: scroll ile beliren dev marka yazısı ve tüm alt yasal bilgiler (Komple Anasayfa Yeşili) */}
+      <div className="bg-brand-dark overflow-hidden text-brand-light">
         <div className="max-w-[100rem] mx-auto px-2">
           <motion.p
             initial={{ y: '35%', opacity: 0 }}
@@ -76,19 +76,16 @@ export default function Footer() {
             ARTI
           </motion.p>
         </div>
-      </div>
 
-      {/* En alt kısım: Yasal Linkler & Telif Hakkı (Beyaz Arka Plan, Koyu Yazı) */}
-      <div className="bg-white border-t border-gray-100 py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex flex-wrap justify-center gap-x-10 gap-y-3 pb-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 pt-4">
+          <nav className="flex flex-wrap justify-center gap-x-10 gap-y-3 pt-2 pb-6 border-t border-white/10">
             {legalLinks.map((l) => (
-              <a key={l} href="#" className="text-sm text-gray-500 hover:text-brand transition-colors">
+              <a key={l} href="#" className="text-sm text-brand-light/80 hover:text-white transition-colors">
                 {l}
               </a>
             ))}
           </nav>
-          <p className="text-center text-sm text-gray-400">
+          <p className="text-center text-sm text-brand-light/60">
             Copyright &copy; {new Date().getFullYear()} Artı. Tüm hakları saklıdır.
           </p>
         </div>
