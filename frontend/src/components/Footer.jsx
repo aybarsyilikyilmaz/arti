@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Linkedin, Instagram, Facebook, Youtube, Twitter, Apple, PlayCircle } from 'lucide-react';
@@ -52,9 +52,38 @@ const letterVariants = {
 
 export default function Footer() {
   const logoWord = "ARTI";
+  const footerRef = useRef(null);
+  const [footerHeight, setFooterHeight] = useState(0);
+
+  useEffect(() => {
+    if (!footerRef.current) return;
+    
+    const handleResize = () => {
+      if (footerRef.current) {
+        setFooterHeight(footerRef.current.offsetHeight);
+      }
+    };
+    
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+    resizeObserver.observe(footerRef.current);
+    
+    handleResize(); // Initial measurement
+    return () => resizeObserver.disconnect();
+  }, []);
 
   return (
-    <footer className="bg-white text-gray-600 border-t border-gray-100">
+    <>
+      {/* Spacer that pushes page scroll flow to match the fixed footer height */}
+      <div style={{ height: footerHeight }} className="pointer-events-none w-full" />
+
+      {/* Fixed footer behind the page */}
+      <footer 
+        ref={footerRef} 
+        className="fixed bottom-0 left-0 w-full z-0"
+        style={{ backfaceVisibility: 'hidden', transform: 'translate3d(0,0,0)' }}
+      >
       {/* Üst bant: linkler + sosyal + mağaza rozetleri */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="flex flex-col items-center gap-8">
@@ -132,5 +161,6 @@ export default function Footer() {
         </div>
       </div>
     </footer>
+    </>
   );
 }

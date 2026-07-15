@@ -8,6 +8,7 @@ import Testimonials from './components/Testimonials';
 import PlaceholderSection from './components/PlaceholderSection';
 import FAQ from './components/FAQ';
 import DownloadCTA from './components/DownloadCTA';
+import Footer from './components/Footer';
 
 function HomePage() {
   return (
@@ -112,7 +113,7 @@ function App() {
       </nav>
 
         {/* Dynamic Route Content */}
-        <main className="flex-grow">
+        <main className="flex-grow relative z-10 bg-white shadow-[0_15px_35px_rgba(0,0,0,0.15)]">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/business" element={<BusinessAuth />} />
@@ -120,11 +121,7 @@ function App() {
         </main>
 
         {/* Footer */}
-        <footer className="bg-brand-dark text-brand-light py-10">
-          <div className="max-w-7xl mx-auto px-4 text-center">
-            <p className="text-lg font-medium">&copy; {new Date().getFullYear()} Artı. Gıdanı Kurtar, Geleceği Koru.</p>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </Router>
   );
