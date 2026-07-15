@@ -112,6 +112,14 @@ export default function Hero() {
   const [sloganIndex, setSloganIndex] = useState(0);
   const [charCount, setCharCount] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [videoSrc, setVideoSrc] = useState(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setVideoSrc('/artıimlecsiz.mov');
+    }, 1600); // Delay loading the 28.8MB video until phone entrance animation finishes (1.6s)
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const currentSlogan = slogans[sloganIndex];
@@ -281,20 +289,28 @@ export default function Hero() {
               
               {/* Phone Screen Area playing the screen recording */}
               <div className="h-full w-full rounded-[2.4rem] overflow-hidden bg-white relative">
-                <video
-                  src="/artıimlecsiz.mov"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                  style={{ 
-                    display: 'block', 
-                    imageRendering: '-webkit-optimize-contrast', 
-                    transform: 'translate3d(0, 0, 0)', 
-                    backfaceVisibility: 'hidden' 
-                  }}
-                />
+                {videoSrc ? (
+                  <video
+                    src={videoSrc}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                    style={{ 
+                      display: 'block', 
+                      imageRendering: '-webkit-optimize-contrast', 
+                      transform: 'translate3d(0, 0, 0)', 
+                      backfaceVisibility: 'hidden' 
+                    }}
+                  />
+                ) : (
+                  <img
+                    src="/step_discover_v2.jpg"
+                    alt="Uygulama Ekranı Önizleme"
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
             </motion.div>
 
