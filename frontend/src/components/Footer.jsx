@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import { Linkedin, Instagram, Facebook, Youtube, Twitter, Apple, PlayCircle } from 'lucide-react';
 
 const topLinks = [
@@ -14,9 +14,6 @@ const legalLinks = ['Yasal', 'Gizlilik Politikası', 'Çerez Politikası', 'Şar
 
 const socials = [Linkedin, Instagram, Facebook, Youtube, Twitter];
 
-
-
-import { useScroll, useTransform, useSpring, motion } from 'framer-motion';
 
 export default function Footer() {
   const logoWord = "ARTI";
