@@ -24,6 +24,36 @@ function HomePage() {
   );
 }
 
+function LogoIcon({ className }) {
+  return (
+    <svg viewBox="0 0 100 80" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      {/* Right branch */}
+      <path d="M45 42 C 55 42, 70 38, 85 25" />
+      <path d="M52 41 C 51 32, 57 24, 63 26 C 63 32, 58 39, 52 41 Z" />
+      <path d="M65 37 C 66 26, 73 20, 80 23 C 78 30, 71 36, 65 37 Z" />
+      <path d="M78 31 C 82 23, 89 18, 93 22 C 90 27, 83 31, 78 31 Z" />
+      <path d="M58 40 C 66 43, 74 42, 77 36 C 72 34, 64 36, 58 40 Z" />
+      <path d="M72 34 C 80 36, 88 34, 90 28 C 85 27, 77 30, 72 34 Z" />
+      <path d="M60 33 L 66 22" />
+      <circle cx="66" cy="22" r="2.5" fill="currentColor" />
+      <path d="M74 27 L 80 16" />
+      <circle cx="80" cy="16" r="2.5" fill="currentColor" />
+
+      {/* Left branch */}
+      <path d="M55 42 C 45 42, 30 46, 15 50" />
+      <path d="M48 43 C 49 52, 43 60, 37 58 C 37 52, 42 45, 48 43 Z" />
+      <path d="M35 45 C 34 56, 27 62, 20 59 C 22 52, 29 46, 35 45 Z" />
+      <path d="M22 47 C 18 57, 11 62, 7 58 C 10 53, 17 49, 22 47 Z" />
+      <path d="M42 44 C 34 41, 26 42, 23 48 C 28 50, 36 48, 42 44 Z" />
+      <path d="M28 47 C 20 45, 12 47, 10 53 C 15 54, 23 51, 28 47 Z" />
+      <path d="M40 50 L 34 61" />
+      <circle cx="34" cy="61" r="2.5" fill="currentColor" />
+      <path d="M26 53 L 20 64" />
+      <circle cx="20" cy="64" r="2.5" fill="currentColor" />
+    </svg>
+  );
+}
+
 function App() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDarkHeader, setIsDarkHeader] = useState(true);
@@ -56,7 +86,7 @@ function App() {
 
   const textColor = useWhiteText ? 'text-white' : 'text-gray-800';
   const hoverColor = useWhiteText ? 'hover:text-green-200' : 'hover:text-brand';
-  const logoColor = useWhiteText ? 'text-white' : 'text-gray-900';
+  const logoColor = useWhiteText ? 'text-white' : 'text-brand';
   const btnStyle = useWhiteText 
     ? 'bg-white text-brand-dark hover:bg-gray-100' 
     : 'bg-gray-900 text-white hover:bg-gray-800';
@@ -90,8 +120,9 @@ function App() {
 
             {/* Center Logo */}
             <div className="flex justify-center flex-1">
-              <Link to="/" className={`text-2xl font-bold ${logoColor} tracking-tight flex items-center justify-center transition-colors`}>
-                Artı+
+              <Link to="/" className={`text-2xl font-bold ${logoColor} tracking-tight flex items-center justify-center gap-2 transition-colors`}>
+                <LogoIcon className="h-8 w-auto" />
+                <span>Artı</span>
               </Link>
             </div>
 
