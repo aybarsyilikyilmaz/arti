@@ -38,9 +38,43 @@ const businessSchema = new mongoose.Schema({
   },
   businessType: {
     type: String,
-    enum: ['restoran', 'firin', 'market', 'diger'],
+    enum: ['restoran', 'firin', 'market', 'kafe', 'manav', 'kasap', 'otel', 'diger'],
     required: [true, 'İşletme tipi zorunludur.']
   },
+  branchType: {
+    type: String,
+    enum: ['tek', 'zincir'],
+    default: 'tek'
+  },
+  // Yasal ve finansal bilgiler
+  legalName: { type: String, trim: true },
+  taxOffice: { type: String, trim: true },
+  taxNumber: { type: String, trim: true },
+  mersisNumber: { type: String, trim: true },
+  // Konum detayı
+  city: { type: String, trim: true },
+  district: { type: String, trim: true },
+  neighborhood: { type: String, trim: true },
+  // Yetkili kişi
+  contactName: { type: String, trim: true },
+  contactRole: {
+    type: String,
+    enum: ['sahibi', 'mudur', 'operasyon', 'diger'],
+    default: 'sahibi'
+  },
+  contactPhone: { type: String, trim: true },
+  // Operasyonel / sürpriz kutu ayarları
+  dailyBoxCount: {
+    type: String,
+    enum: ['1-2', '3-5', '6-10', '10+'],
+    default: '1-2'
+  },
+  boxContents: [{
+    type: String,
+    enum: ['unlu', 'sicak', 'meze', 'manav', 'karisik', 'vegan']
+  }],
+  pickupStart: { type: String, trim: true },
+  pickupEnd: { type: String, trim: true },
   createdAt: {
     type: Date,
     default: Date.now

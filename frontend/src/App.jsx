@@ -9,6 +9,7 @@ import PlaceholderSection from './components/PlaceholderSection';
 import FAQ from './components/FAQ';
 import DownloadCTA from './components/DownloadCTA';
 import Footer from './components/Footer';
+import About from './components/About';
 
 function HomePage() {
   return (
@@ -68,6 +69,11 @@ function App() {
   
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDarkHeader, setIsDarkHeader] = useState(true);
+
+  // Sayfa değişimlerinde scroll pozisyonunu en tepeye sıfırla (Scroll to Top)
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -135,7 +141,7 @@ function App() {
                     </svg>
                     <span>Çevrendekiler</span>
                   </Link>
-                  <Link to="/" className={`${textColor} ${hoverColor} transition font-normal text-[15px] hidden md:block`}>Hakkımızda</Link>
+                  <Link to="/about" className={`${textColor} ${hoverColor} transition font-normal text-[15px] hidden md:block`}>Hakkımızda</Link>
                   <Link to="/business" className={`${textColor} ${hoverColor} transition font-normal text-[15px] hidden md:block`}>İşletme</Link>
                 </>
               )}
@@ -175,6 +181,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/business" element={<BusinessAuth />} />
+            <Route path="/about" element={<About />} />
           </Routes>
         </main>
 

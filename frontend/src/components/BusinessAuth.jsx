@@ -259,31 +259,27 @@ export default function BusinessAuth() {
   };
 
   return (
-    <div className="min-h-[85vh] bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md flex flex-col items-center">
-        <Link to="/" className="flex items-center justify-center text-brand hover:opacity-90 transition-opacity mb-2" aria-label="Anasayfa">
-          <LogoIcon className="h-12 w-auto" />
-        </Link>
-        <h2 className="mt-4 text-center text-3xl font-extrabold text-gray-900 tracking-tight">
-          {isLogin ? 'İşletme Hesabınıza Giriş Yapın' : 'İşletmenizi Kaydedin'}
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Fazla gıdaları gelire dönüştürün, çevreyi koruyun.
-        </p>
-      </div>
+    <div className="min-h-[calc(100vh-73px)] bg-white flex flex-col justify-center select-none">
+      {isLogin ? (
+        /* ------------------- GİRİŞ FORMU (ORTALANMIŞ KART) ------------------- */
+        <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 py-12">
+          {/* Title section (Centered inside login wrapper) */}
+          <div className="flex flex-col items-center mb-8">
+            <h2 className="text-center text-3xl font-extrabold text-gray-900 tracking-tight">
+              İşletme Hesabınıza Giriş Yapın
+            </h2>
+            <p className="mt-2 text-center text-sm text-gray-600">
+              Fazla gıdaları gelire dönüştürün, çevreyi koruyun.
+            </p>
+          </div>
 
-      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-2xl">
-        <div className="bg-white py-10 px-6 shadow-xl rounded-3xl sm:px-10 border border-gray-100">
-
-          {message && (
-            <div className={`mb-6 p-4 rounded-xl text-sm font-medium border ${message.type === 'success' ? 'bg-green-50 text-green-800 border-green-200' : 'bg-red-50 text-red-800 border-red-200'}`}>
-              {message.text}
-            </div>
-          )}
-
-          {/* ------------------- GİRİŞ ------------------- */}
-          {isLogin ? (
-            <form className="space-y-6 max-w-md mx-auto" onSubmit={handleLoginSubmit}>
+          <div className="bg-white py-10 px-6 shadow-xl rounded-3xl sm:px-10 border border-gray-100">
+            {message && (
+              <div className={`mb-6 p-4 rounded-xl text-sm font-medium border ${message.type === 'success' ? 'bg-green-50 text-green-800 border-green-200' : 'bg-red-50 text-red-800 border-red-200'}`}>
+                {message.text}
+              </div>
+            )}
+            <form className="space-y-6" onSubmit={handleLoginSubmit}>
               <Field label="E-posta Adresi">
                 <input name="email" type="email" required value={formData.email} onChange={handleChange} className={inputCls} />
               </Field>
@@ -294,8 +290,73 @@ export default function BusinessAuth() {
                 {loading ? 'İşleniyor...' : 'Giriş Yap'}
               </button>
             </form>
-          ) : (
-            <>
+            <div className="mt-8 text-center border-t border-gray-100 pt-6">
+              <button onClick={switchMode} className="font-medium text-brand hover:text-brand-dark text-sm transition-colors">
+                İşletmenizi henüz kaydetmediniz mi? Hemen kayıt olun.
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* ------------------- KAYIT FORMU (FULL-BLEED SPLIT SCREEN YERLEŞİM) ------------------- */
+        <div className="w-full flex-grow flex flex-col lg:flex-row items-stretch">
+          
+          {/* Sol Kolon: Boydan Boya Görsel ve Üzerindeki Yazılar */}
+          <div className="w-full lg:w-[45%] bg-white flex items-center justify-center p-8 sticky top-[73px] lg:self-start lg:h-[calc(100vh-73px)] select-none">
+            <div className="relative w-full max-w-[560px] aspect-square">
+              <img 
+                src="/baker_onboarding_steps.jpg?v=4" 
+                alt="İşletme Katılım Süreci" 
+                className="w-full h-full object-cover block"
+              />
+              
+              {/* 1. Adım Üstü Yazısı: Kayıt Ol */}
+              <div className="absolute top-[10%] left-[16%] -translate-x-1/2 flex flex-col items-center">
+                <div className="bg-brand/90 backdrop-blur-sm text-white text-[11px] font-extrabold px-3 py-1.5 rounded-full shadow-lg border border-white/20 whitespace-nowrap">
+                  1. Kayıt Ol
+                </div>
+                <div className="w-1.5 h-1.5 bg-brand rotate-45 -mt-1 shadow-md border-r border-b border-white/25"></div>
+              </div>
+
+              {/* 2. Adım Altı Yazısı: Bilgilerini Onayla */}
+              <div className="absolute bottom-[20%] left-[35%] -translate-x-1/2 flex flex-col items-center">
+                <div className="w-1.5 h-1.5 bg-brand rotate-45 -mb-1 z-10 shadow-md border-t border-l border-white/25"></div>
+                <div className="bg-brand/90 backdrop-blur-sm text-white text-[11px] font-extrabold px-3 py-1.5 rounded-full shadow-lg border border-white/20 whitespace-nowrap">
+                  2. Bilgilerini Onayla
+                </div>
+              </div>
+
+              {/* 3. Adım Üstü Yazısı: Sürpriz Kutuyu Hazırla */}
+              <div className="absolute top-[20%] left-[64%] -translate-x-1/2 flex flex-col items-center">
+                <div className="bg-brand/90 backdrop-blur-sm text-white text-[11px] font-extrabold px-3 py-1.5 rounded-full shadow-lg border border-white/20 whitespace-nowrap">
+                  3. Sürpriz Kutuyu Hazırla
+                </div>
+                <div className="w-1.5 h-1.5 bg-brand rotate-45 -mt-1 shadow-md border-r border-b border-white/25"></div>
+              </div>
+
+              {/* 4. Adım Altı Yazısı: İşletmeni ve Doğayı Artıya Geçir */}
+              <div className="absolute bottom-[2%] left-[82%] -translate-x-1/2 flex flex-col items-center">
+                <div className="w-1.5 h-1.5 bg-brand rotate-45 -mb-1 z-10 shadow-md border-t border-l border-white/25"></div>
+                <div className="bg-brand/90 backdrop-blur-sm text-white text-[11px] font-extrabold px-3 py-1.5 rounded-full shadow-lg border border-white/20 whitespace-nowrap">
+                  4. İşletmeni ve Doğayı Artı'ya Geçir 🌱
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sağ Kolon: Kayıt Sihirbazı Kartı */}
+          <div className="w-full lg:w-[55%] bg-white flex flex-col justify-center py-16 px-4 sm:px-12 lg:px-20 min-h-full">
+            <div className="w-full max-w-xl mx-auto flex flex-col items-center mb-8">
+              <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">İşletmenizi Kaydedin</h2>
+              <p className="text-sm text-gray-500 mt-1">Fazla gıdaları gelire dönüştürün, çevreyi koruyun.</p>
+            </div>
+            
+            <div className="w-full max-w-xl mx-auto bg-white py-10 px-6 sm:px-10 shadow-xl rounded-3xl border border-gray-100 relative overflow-hidden">
+              {message && (
+                <div className={`mb-6 p-4 rounded-xl text-sm font-medium border ${message.type === 'success' ? 'bg-green-50 text-green-800 border-green-200' : 'bg-red-50 text-red-800 border-red-200'}`}>
+                  {message.text}
+                </div>
+              )}
               {/* ------------- İLERLEME ÇUBUĞU ------------- */}
               <div className="mb-10">
                 <div className="flex items-center justify-between relative">
@@ -593,17 +654,16 @@ export default function BusinessAuth() {
                   </button>
                 )}
               </div>
-            </>
+                  {/* ------------- MOD DEĞİŞTİRME ------------- */}
+                  <div className="mt-8 text-center border-t border-gray-100 pt-6">
+                    <button onClick={switchMode} className="font-medium text-brand hover:text-brand-dark text-sm transition-colors">
+                      Zaten bir hesabınız var mı? Buradan giriş yapın.
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
-
-          {/* ------------- MOD DEĞİŞTİRME ------------- */}
-          <div className="mt-8 text-center border-t border-gray-100 pt-6">
-            <button onClick={switchMode} className="font-medium text-brand hover:text-brand-dark text-sm transition-colors">
-              {isLogin ? 'İşletmenizi henüz kaydetmediniz mi? Hemen kayıt olun.' : 'Zaten bir hesabınız var mı? Buradan giriş yapın.'}
-            </button>
-          </div>
         </div>
-      </div>
-    </div>
-  );
-}
+      );
+    }

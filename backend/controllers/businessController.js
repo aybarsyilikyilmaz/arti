@@ -9,7 +9,13 @@ const signToken = id => {
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, phone, password, address, coordinates, businessType } = req.body;
+    const {
+      name, email, phone, password, address, coordinates, businessType,
+      branchType, legalName, taxOffice, taxNumber, mersisNumber,
+      city, district, neighborhood,
+      contactName, contactRole, contactPhone,
+      dailyBoxCount, boxContents, pickupStart, pickupEnd
+    } = req.body;
 
     const existingBusiness = await Business.findOne({ email });
     if (existingBusiness) {
@@ -23,7 +29,22 @@ exports.register = async (req, res) => {
       password,
       address,
       location: coordinates ? { type: 'Point', coordinates } : undefined,
-      businessType
+      businessType,
+      branchType,
+      legalName,
+      taxOffice,
+      taxNumber,
+      mersisNumber,
+      city,
+      district,
+      neighborhood,
+      contactName,
+      contactRole,
+      contactPhone,
+      dailyBoxCount,
+      boxContents,
+      pickupStart,
+      pickupEnd
     });
 
     const token = signToken(newBusiness._id);
