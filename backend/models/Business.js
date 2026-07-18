@@ -88,6 +88,9 @@ const businessSchema = new mongoose.Schema({
   defaultPackageCount: { type: Number, min: 0 },
   defaultPrice: { type: Number, min: 1 },
   defaultOriginalPrice: { type: Number, min: 1 },
+  // Görseller — depolama adaptöründen dönen publicUrl (lokal disk veya S3/CDN)
+  logoUrl: { type: String, trim: true, maxlength: 500 },
+  coverUrl: { type: String, trim: true, maxlength: 500 },
   // Operasyonel / sürpriz kutu ayarları
   dailyBoxCount: {
     type: String,

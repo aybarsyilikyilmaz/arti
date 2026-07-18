@@ -16,6 +16,9 @@ build/
 .DS_Store
 Thumbs.db
 
+# Yüklenen görseller (lokal depolama modu)
+backend/uploads/
+
 # Environment variables
 .env
 .env.local

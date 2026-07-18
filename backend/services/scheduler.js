@@ -15,6 +15,18 @@ const JOBS = [
 
 const handlers = Object.fromEntries(JOBS.map((j) => [j.name, j.handler]));
 
+// healthz için Redis durumu: 'up' | 'down' | 'n/a' (interval modu)
+let activeQueue = null;
+async function redisPing() {
+  if (!activeQueue) return 'n/a';
+  try {
+    const client = await activeQueue.client;
+    return (await client.ping()) === 'PONG' ? 'up' : 'down';
+  } catch {
+    return 'down';
+  }
+}
+
 async function startBullMq() {
   const { Queue, Worker } = require('bullmq');
   const IORedis = require('ioredis');
@@ -22,6 +34,7 @@ async function startBullMq() {
   const makeConnection = () => new IORedis(env.redisUrl, { maxRetriesPerRequest: null });
 
   const queue = new Queue('arti-jobs', { connection: makeConnection() });
+  activeQueue = queue;
 
   for (const job of JOBS) {
     // Tekrarlayan işler deterministik anahtarla kaydedilir; restart'ta çoğalmaz
@@ -38,6 +51,7 @@ async function startBullMq() {
   logger.info('Zamanlanmış işler BullMQ üzerinde aktif (Redis)');
   return {
     stop: async () => {
+      activeQueue = null;
       await worker.close();
       await queue.close();
     },
@@ -71,4 +85,4 @@ async function startSchedulers() {
   return startIntervals();
 }
 
-module.exports = { startSchedulers };
+module.exports = { startSchedulers, redisPing };

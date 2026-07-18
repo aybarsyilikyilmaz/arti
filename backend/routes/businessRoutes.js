@@ -7,6 +7,8 @@ const { validateBody } = require('../middleware/validate');
 const { protect, requireApprovedBusiness } = require('../middleware/auth');
 const { registerSchema, loginSchema } = require('../schemas/businessSchemas');
 const { upsertBoxSchema, verifyQrSchema } = require('../schemas/boxSchemas');
+const { presignSchema, setImagesSchema } = require('../schemas/uploadSchemas');
+const uploadController = require('../controllers/uploadController');
 
 const router = express.Router();
 
@@ -22,5 +24,9 @@ router.get('/boxes/today', protect('business'), boxController.getTodayBox);
 
 // QR teslim onayı
 router.post('/orders/verify', protect('business'), validateBody(verifyQrSchema), orderController.verifyPickup);
+
+// Görsel yükleme: presigned URL al → dosyayı PUT et → profiline yaz (PLAN.md §1)
+router.post('/uploads/presign', protect('business'), validateBody(presignSchema), uploadController.presign);
+router.patch('/profile/images', protect('business'), validateBody(setImagesSchema), uploadController.setImages);
 
 module.exports = router;

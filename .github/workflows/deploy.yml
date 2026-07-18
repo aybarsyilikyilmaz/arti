@@ -1,0 +1,30 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: EC2'ye SSH ile deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          script: |
+            cd /home/ubuntu/arti
+            git fetch origin main
+            git reset --hard origin/main
+            cd backend
+            npm ci --omit=dev
+            bash deploy/render-env.sh
+            pm2 reload ecosystem.config.js --env production --update-env
+            sleep 3
+            curl -sf http://127.0.0.1:5002/healthz

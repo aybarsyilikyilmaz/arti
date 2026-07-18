@@ -1,6 +1,7 @@
 // Env doğrulaması her şeyden önce çalışır (fail-fast) — eksik secret'la süreç başlamaz.
 const env = require('./config/env');
 
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -11,7 +12,8 @@ const cookieParser = require('cookie-parser');
 const logger = require('./utils/logger');
 const { deepGuard, requestTimeout, haltOnTimedOut, mongoSanitize, hpp } = require('./middleware/security');
 const { globalLimiter } = require('./middleware/rateLimiters');
-const { startSchedulers } = require('./services/scheduler');
+const { startSchedulers, redisPing } = require('./services/scheduler');
+const uploadController = require('./controllers/uploadController');
 const { validateBody } = require('./middleware/validate');
 const { webhookSchema } = require('./schemas/desk360Schemas');
 const desk360Controller = require('./controllers/desk360Controller');
@@ -51,15 +53,34 @@ mongoose
   .then(() => logger.info('MongoDB bağlantısı kuruldu'))
   .catch((err) => logger.error({ err }, 'MongoDB bağlantı hatası'));
 
-// --- Sağlık kontrolü ---
-app.get('/healthz', (_req, res) => {
+// --- Sağlık kontrolü (UptimeRobot + Nginx upstream check) ---
+app.get('/healthz', async (_req, res) => {
   const dbUp = mongoose.connection.readyState === 1;
-  res.status(dbUp ? 200 : 503).json({
-    status: dbUp ? 'ok' : 'degraded',
+  const redis = await redisPing(); // 'up' | 'down' | 'n/a'
+  const ok = dbUp && redis !== 'down';
+  res.status(ok ? 200 : 503).json({
+    status: ok ? 'ok' : 'degraded',
     db: dbUp ? 'up' : 'down',
+    redis,
     uptime: Math.round(process.uptime()),
   });
 });
+
+// --- Lokal depolama modu: S3 simülasyonu (PLAN.md §1, Faz 3) ---
+if (env.storageProvider === 'local') {
+  // Presigned PUT hedefi — imza/expiry doğrulaması localProvider.saveUpload'da
+  app.put(
+    '/api/v1/uploads/local/*',
+    express.raw({ type: () => true, limit: '5mb' }),
+    uploadController.putLocal
+  );
+  // Yüklenen görsellerin statik servisi; CORP başlığı frontend origin'inin
+  // görselleri yükleyebilmesi için gerekli (helmet varsayılanı same-origin)
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+    maxAge: '7d',
+    setHeaders: (res) => res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin'),
+  }));
+}
 
 // --- Rotalar ---
 app.use('/api/v1/business', businessRoutes);
@@ -89,8 +110,9 @@ app.use((err, req, res, _next) => {
   });
 });
 
-const server = app.listen(env.port, () => {
-  logger.info(`Artı API ${env.port} portunda çalışıyor (${env.nodeEnv})`);
+// Üretimde yalnızca 127.0.0.1 dinlenir; dış dünyaya Nginx açılır (PLAN.md §6.11)
+const server = app.listen(env.port, env.host, () => {
+  logger.info(`Artı API ${env.host}:${env.port} üzerinde çalışıyor (${env.nodeEnv}, depolama: ${env.storageProvider})`);
 });
 
 // Zamanlanmış işler: rezervasyon süpürme, WhatsApp taraması, fallback yayın

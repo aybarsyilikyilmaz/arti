@@ -8,6 +8,8 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1090.0",
+    "@aws-sdk/s3-request-presigner": "^3.1090.0",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.80.8",
     "connect-timeout": "^1.9.1",

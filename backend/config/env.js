@@ -29,11 +29,22 @@ if (!/^[0-9a-f]{64}$/i.test(process.env.ENCRYPTION_KEY)) {
 }
 
 const nodeEnv = process.env.NODE_ENV || 'development';
+const isProd = nodeEnv === 'production';
+
+// Depolama: 'local' (dev — dosyalar backend/uploads altına yazılır) | 's3' (üretim)
+const storageProvider = process.env.STORAGE_PROVIDER || 'local';
+if (storageProvider === 's3' && (!process.env.S3_BUCKET || !process.env.S3_REGION)) {
+  // eslint-disable-next-line no-console
+  console.error('[env] STORAGE_PROVIDER=s3 için S3_BUCKET ve S3_REGION zorunludur.');
+  process.exit(1);
+}
 
 module.exports = {
   nodeEnv,
-  isProd: nodeEnv === 'production',
+  isProd,
   port: parseInt(process.env.PORT, 10) || 5002,
+  // Üretimde Nginx arkasında yalnızca loopback dinlenir (PLAN.md §6.11)
+  host: process.env.HOST || (isProd ? '127.0.0.1' : '0.0.0.0'),
   mongoUri: process.env.MONGO_URI,
 
   jwtSecret: process.env.JWT_SECRET,
@@ -63,6 +74,15 @@ module.exports = {
   // Pickup'a kaç dk kala WhatsApp sorusu gider / fallback yayını yapılır
   outreachLeadMin: parseInt(process.env.OUTREACH_LEAD_MIN, 10) || 240,
   fallbackLeadMin: parseInt(process.env.FALLBACK_LEAD_MIN, 10) || 60,
+
+  // Dosya depolama (işletme logosu / kutu görselleri — PLAN.md §1)
+  storageProvider,
+  s3Bucket: process.env.S3_BUCKET || '',
+  s3Region: process.env.S3_REGION || '',
+  // Görsellerin servis edildiği taban URL (CDN eklenirse burası değişir)
+  s3PublicBase: process.env.S3_PUBLIC_BASE || '',
+  // API'nin dışarıdan görünen adresi (lokal presigned URL üretimi için)
+  publicApiUrl: process.env.PUBLIC_API_URL || `http://localhost:${parseInt(process.env.PORT, 10) || 5002}`,
 
   allowedOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:5174')
     .split(',')
