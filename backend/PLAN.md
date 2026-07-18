@@ -215,22 +215,25 @@ Orijinal plandaki kalkanlar aynen korunur, üzerine eklenir:
 
 ## 10. Yol Haritası
 
-**Faz 0 — Temel sertleştirme (mevcut kod üzerinde, ~hemen)**
+**Faz 0 — Temel sertleştirme ✅ (tamamlandı)**
 Fail-fast env, hardcoded secret temizliği, zod şemaları, auth rate limitleri,
 kalkan middleware'leri, healthz, pino+Sentry.
 
-**Faz 1 — Çekirdek pazar yeri (P0)**
+**Faz 1 — Çekirdek pazar yeri ✅ (tamamlandı — e2e 27/27)**
 User modeli + auth (refresh dahil), SurpriseBox + atomik rezervasyon,
 iyzico adapter + callback, Order state machine + QR verify,
 Business onay akışı + minimum admin uçları, KVKK şifreleme + rıza.
 
-**Faz 2 — Otomasyon**
+**Faz 2 — Otomasyon ✅ (tamamlandı — e2e 18/18)**
 Redis + BullMQ kurulumu, pickup tarama job'ı, Desk360 simülatörü + webhook handler,
 cevapsız-işletme fallback'i, expire-order job'ı Faz 1'den buraya bağlanır.
 
-**Faz 3 — Üretime çıkış**
-EC2 + Nginx + certbot + PM2, SSM secrets, S3 presigned upload,
-CI/CD (GitHub Actions → EC2 deploy), UptimeRobot, yük testi (k6 ile checkout senaryosu).
+**Faz 3 — Üretime çıkış ✅ kod tarafı hazır (AWS hesabı açılınca yayın — bkz. `deploy/DEPLOY.md`)**
+Depolama adaptörü (local ↔ S3, env ile geçiş) + presigned upload uçları ✅,
+PM2 `ecosystem.config.js` ✅, Nginx şablonu `deploy/nginx.arti.conf` ✅,
+SSM secret render `deploy/render-env.sh` ✅, CI (GitHub Actions, e2e 58 kontrol) ✅,
+manuel deploy workflow ✅, k6 checkout senaryosu ✅, healthz Mongo+Redis ping ✅.
+Kalan: EC2/S3/Atlas kurulumunun kendisi — adım adım runbook `deploy/DEPLOY.md`.
 
 **Faz 4 — İyileştirmeler (P2)**
 Favoriler/bildirimler, işletme paneli raporları, PayTR adapter'ı,

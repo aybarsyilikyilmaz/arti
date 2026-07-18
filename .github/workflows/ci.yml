@@ -56,3 +56,6 @@ jobs:
 
       - name: Faz 2 duman testi (18 kontrol)
         run: node scripts/e2e-faz2.js
+
+      - name: Faz 3 duman testi (görsel yükleme akışı)
+        run: node scripts/e2e-faz3.js
