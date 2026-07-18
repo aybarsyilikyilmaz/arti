@@ -6,6 +6,12 @@ const { hmacVerify } = require('../utils/crypto');
 exports.checkout = async (req, res, next) => {
   try {
     const result = await orderService.reserveBox(req.auth.id, req.body.boxId);
+    if (result?.limited) {
+      const message = result.limited === 'ACTIVE'
+        ? 'Bekleyen rezervasyon sayısı sınırına ulaştınız. Önce mevcut ödemelerinizi tamamlayın.'
+        : 'Günlük sipariş limitinize ulaştınız. Yarın tekrar deneyebilirsiniz.';
+      return res.status(429).json({ status: 'fail', message });
+    }
     if (!result) {
       return res.status(409).json({ status: 'fail', message: 'Üzgünüz, bu kutu az önce tükendi.' });
     }

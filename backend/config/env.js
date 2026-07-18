@@ -63,6 +63,14 @@ module.exports = {
   // Rezervasyon ödeme penceresi (dk) — süre dolarsa stok geri salınır
   reservationTtlMin: parseInt(process.env.RESERVATION_TTL_MIN, 10) || 10,
 
+  // Fraud kuralları (PLAN.md Faz 4): stok kilitleme ve toplu kapatma istismarına fren
+  maxActiveReservations: parseInt(process.env.MAX_ACTIVE_RESERVATIONS, 10) || 3,
+  maxDailyOrders: parseInt(process.env.MAX_DAILY_ORDERS, 10) || 10,
+
+  // CDN katmanı devreye girince doldurulur: doluysa /api istekleri
+  // X-Proxy-Secret başlığı olmadan işlenmez (PLAN.md Faz 4)
+  proxySharedSecret: process.env.PROXY_SHARED_SECRET || '',
+
   // Kuyruk altyapısı: boşsa tek-instance in-process moda düşer (yalnızca dev)
   redisUrl: process.env.REDIS_URL || '',
 

@@ -10,7 +10,7 @@ const pinoHttp = require('pino-http');
 const cookieParser = require('cookie-parser');
 
 const logger = require('./utils/logger');
-const { deepGuard, requestTimeout, haltOnTimedOut, mongoSanitize, hpp } = require('./middleware/security');
+const { deepGuard, requestTimeout, haltOnTimedOut, mongoSanitize, hpp, proxySecret } = require('./middleware/security');
 const { globalLimiter } = require('./middleware/rateLimiters');
 const { startSchedulers, redisPing } = require('./services/scheduler');
 const uploadController = require('./controllers/uploadController');
@@ -45,6 +45,7 @@ app.use(haltOnTimedOut);
 app.use(deepGuard);                      // Prototype pollution + derinlik sınırı
 app.use(mongoSanitize);                  // NoSQL injection
 app.use(hpp);                            // HTTP parameter pollution
+app.use('/api', proxySecret);            // CDN varken origin'e direkt erişim engeli (env ile açılır)
 app.use('/api', globalLimiter);          // Genel IP limiti
 
 // --- Veritabanı ---

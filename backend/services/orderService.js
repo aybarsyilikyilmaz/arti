@@ -14,9 +14,29 @@ async function releaseStock(boxId) {
   await SurpriseBox.updateOne({ _id: boxId }, { $inc: { remaining: 1 } });
 }
 
+// Fraud frenleri (PLAN.md Faz 4) — stok düşülmeden ÖNCE kontrol edilir ki
+// engellenen istek stok churn'u yaratmasın. Limitler env'den ayarlanır.
+async function checkFraudLimits(userId) {
+  const active = await Order.countDocuments({ user: userId, status: 'RESERVED' });
+  if (active >= env.maxActiveReservations) return 'ACTIVE';
+
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const daily = await Order.countDocuments({
+    user: userId,
+    createdAt: { $gte: dayAgo },
+    status: { $ne: 'EXPIRED' }, // düşen rezervasyonlar kotayı yemez
+  });
+  if (daily >= env.maxDailyOrders) return 'DAILY';
+
+  return null;
+}
+
 // 1) Atomik rezervasyon: son kutuyu aynı anda isteyen N kullanıcıdan yalnızca
-//    stok kadarı kazanır; kaybedenlere null döner.
+//    stok kadarı kazanır; kaybedenlere null döner. Limit aşımında { limited } döner.
 async function reserveBox(userId, boxId) {
+  const limited = await checkFraudLimits(userId);
+  if (limited) return { limited };
+
   const box = await SurpriseBox.findOneAndUpdate(
     { _id: boxId, date: todayIstanbul(), remaining: { $gt: 0 } },
     { $inc: { remaining: -1 } },

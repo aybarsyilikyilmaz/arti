@@ -33,6 +33,9 @@ exports.upsertTodayBox = async (req, res, next) => {
       location: business.location?.coordinates ? business.location : undefined,
     });
 
+    // Favorileyen kullanıcılara uygulama içi bildirim (akışı asla kesmez)
+    require('../services/notificationService').notifyBoxPublishedSafe(business, box);
+
     res.status(201).json({ status: 'success', data: { box } });
   } catch (err) {
     next(err);

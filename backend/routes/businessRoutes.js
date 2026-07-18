@@ -3,12 +3,14 @@ const businessController = require('../controllers/businessController');
 const boxController = require('../controllers/boxController');
 const orderController = require('../controllers/orderController');
 const { authLimiter, authSlowDown } = require('../middleware/rateLimiters');
-const { validateBody } = require('../middleware/validate');
+const { validateBody, validateQuery } = require('../middleware/validate');
 const { protect, requireApprovedBusiness } = require('../middleware/auth');
 const { registerSchema, loginSchema } = require('../schemas/businessSchemas');
 const { upsertBoxSchema, verifyQrSchema } = require('../schemas/boxSchemas');
 const { presignSchema, setImagesSchema } = require('../schemas/uploadSchemas');
 const uploadController = require('../controllers/uploadController');
+const { summaryQuerySchema } = require('../schemas/reportSchemas');
+const reportController = require('../controllers/reportController');
 
 const router = express.Router();
 
@@ -24,6 +26,9 @@ router.get('/boxes/today', protect('business'), boxController.getTodayBox);
 
 // QR teslim onayı
 router.post('/orders/verify', protect('business'), validateBody(verifyQrSchema), orderController.verifyPickup);
+
+// Panel raporu: bugünün kutusu + dönem ciro/sipariş özeti (PLAN.md Faz 4)
+router.get('/reports/summary', protect('business'), validateQuery(summaryQuerySchema), reportController.summary);
 
 // Görsel yükleme: presigned URL al → dosyayı PUT et → profiline yaz (PLAN.md §1)
 router.post('/uploads/presign', protect('business'), validateBody(presignSchema), uploadController.presign);

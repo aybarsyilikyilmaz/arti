@@ -1,7 +1,22 @@
 // Kurumsal güvenlik kalkanları (PLAN.md §6)
+const crypto = require('crypto');
 const mongoSanitize = require('express-mongo-sanitize');
 const hpp = require('hpp');
 const timeout = require('connect-timeout');
+const env = require('../config/env');
+
+// CDN katmanı (PLAN.md Faz 4): PROXY_SHARED_SECRET doluysa /api istekleri
+// yalnızca doğru X-Proxy-Secret başlığıyla işlenir — origin'e CDN'i atlayarak
+// doğrudan erişim engellenir. Boşken (tek EC2 + Nginx) devre dışıdır.
+function proxySecret(req, res, next) {
+  if (!env.proxySharedSecret) return next();
+  const given = Buffer.from(String(req.get('x-proxy-secret') || ''));
+  const expected = Buffer.from(env.proxySharedSecret);
+  if (given.length !== expected.length || !crypto.timingSafeEqual(given, expected)) {
+    return res.status(403).json({ status: 'fail', message: 'Erişim reddedildi.' });
+  }
+  next();
+}
 
 const MAX_DEPTH = 10;
 const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
@@ -51,4 +66,5 @@ module.exports = {
   haltOnTimedOut,
   mongoSanitize: mongoSanitize(),
   hpp: hpp(),
+  proxySecret,
 };

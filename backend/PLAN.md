@@ -235,6 +235,11 @@ SSM secret render `deploy/render-env.sh` ✅, CI (GitHub Actions, e2e 58 kontrol
 manuel deploy workflow ✅, k6 checkout senaryosu ✅, healthz Mongo+Redis ping ✅.
 Kalan: EC2/S3/Atlas kurulumunun kendisi — adım adım runbook `deploy/DEPLOY.md`.
 
-**Faz 4 — İyileştirmeler (P2)**
-Favoriler/bildirimler, işletme paneli raporları, PayTR adapter'ı,
-CDN + X-Proxy-Secret katmanı, gelişmiş fraud kuralları.
+**Faz 4 — İyileştirmeler ✅ backend tamam (e2e 21/21)**
+Favoriler + kutu yayını bildirimleri (uygulama içi, 3 yayın noktasına bağlı) ✅,
+işletme rapor ucu (`GET /business/reports/summary`) ✅,
+fraud frenleri (aktif rezervasyon ≤3, günlük sipariş ≤10 — env ayarlı) ✅,
+X-Proxy-Secret katmanı (PROXY_SHARED_SECRET dolunca aktif, CDN günü için) ✅.
+Kalan: PayTR/iyzico gerçek adapter (mağaza anahtarları gelince — mock ile aynı arayüz),
+push bildirim (FCM; Notification kayıtları gönderim kuyruğu olarak hazır),
+admin/işletme paneli frontend ekranları.

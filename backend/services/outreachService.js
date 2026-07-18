@@ -52,7 +52,8 @@ async function applyCount(business, count, replyText) {
     await SurpriseBox.updateOne({ _id: box._id }, { $inc: { extraStock: count, remaining: count } });
     outcome = 'APPLIED_INC';
   } else if (hasPublishDefaults(business)) {
-    await SurpriseBox.create({ ...boxDefaults(business), initialStock: 0, extraStock: count, remaining: count });
+    const created = await SurpriseBox.create({ ...boxDefaults(business), initialStock: 0, extraStock: count, remaining: count });
+    require('./notificationService').notifyBoxPublishedSafe(business, created);
     outcome = 'APPLIED_NEW_BOX';
   } else {
     outcome = 'PENDING_REVIEW_NO_PRICE'; // fiyat bilinmeden otomatik yayın yapılmaz
@@ -136,8 +137,9 @@ async function sweepFallback() {
     const exists = await SurpriseBox.findOne({ business: business._id, date }).select('_id');
     if (exists) continue;
 
+    let created;
     try {
-      await SurpriseBox.create({
+      created = await SurpriseBox.create({
         ...boxDefaults(business),
         initialStock: business.defaultPackageCount,
         remaining: business.defaultPackageCount,
@@ -146,6 +148,7 @@ async function sweepFallback() {
       if (err.code === 11000) continue; // yarışta başka süreç yayınladı
       throw err;
     }
+    require('./notificationService').notifyBoxPublishedSafe(business, created);
 
     // REPLIED durumunu ezmeden fallback bilgisini işle
     await OutreachLog.findOneAndUpdate(
