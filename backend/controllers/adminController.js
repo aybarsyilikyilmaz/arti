@@ -19,6 +19,27 @@ exports.login = async (req, res, next) => {
   }
 };
 
+exports.refresh = async (req, res, next) => {
+  try {
+    const session = await tokenService.rotateSession(req, res, AdminUser, 'admin');
+    if (!session) {
+      return res.status(401).json({ status: 'fail', message: 'Oturum geçersiz. Lütfen tekrar giriş yapın.' });
+    }
+    res.status(200).json({ status: 'success', accessToken: session.accessToken });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.logout = async (req, res, next) => {
+  try {
+    await tokenService.revokeSession(req, res, AdminUser, 'admin');
+    res.status(200).json({ status: 'success', message: 'Çıkış yapıldı.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.listBusinesses = async (req, res, next) => {
   try {
     const { status, page, limit } = req.query;
@@ -96,6 +117,23 @@ exports.applyOutreach = async (req, res, next) => {
       message: ok ? 'Stok işlendi.' : 'İşlenemedi: işletmenin varsayılan fiyatları tanımlı değil.',
       outcome,
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// PENDING_REVIEW kaydını işlem yapmadan kapatır ("yoksay") — kuyruk temiz kalır
+exports.dismissOutreach = async (req, res, next) => {
+  try {
+    const log = await OutreachLog.findOneAndUpdate(
+      { _id: req.params.id, status: 'PENDING_REVIEW' },
+      { status: 'DISMISSED' },
+      { new: true }
+    );
+    if (!log) {
+      return res.status(409).json({ status: 'fail', message: 'Kayıt bulunamadı ya da incelemede değil.' });
+    }
+    res.status(200).json({ status: 'success', message: 'Kayıt yoksayıldı.' });
   } catch (err) {
     next(err);
   }

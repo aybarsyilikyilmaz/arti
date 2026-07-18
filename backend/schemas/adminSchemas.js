@@ -12,7 +12,7 @@ const listBusinessesQuerySchema = z.object({
 });
 
 const listOutreachQuerySchema = z.object({
-  status: z.enum(['SENT', 'REPLIED', 'PENDING_REVIEW', 'FALLBACK_PUBLISHED']).optional(),
+  status: z.enum(['SENT', 'REPLIED', 'PENDING_REVIEW', 'FALLBACK_PUBLISHED', 'DISMISSED']).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });

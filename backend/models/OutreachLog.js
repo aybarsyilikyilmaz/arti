@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 // Günlük WhatsApp otomasyon kaydı — {business, date} unique indeksi sayesinde
 // aynı işletmeye aynı gün ikinci mesaj gitmesi imkânsızdır (restart dahil).
-const OUTREACH_STATUSES = ['SENT', 'REPLIED', 'PENDING_REVIEW', 'FALLBACK_PUBLISHED'];
+const OUTREACH_STATUSES = ['SENT', 'REPLIED', 'PENDING_REVIEW', 'FALLBACK_PUBLISHED', 'DISMISSED'];
 
 const outreachLogSchema = new mongoose.Schema({
   business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', required: true },

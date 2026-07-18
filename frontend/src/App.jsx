@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminLayout from './pages/admin/AdminLayout';
+import BusinessApprovals from './pages/admin/BusinessApprovals';
+import OutreachQueue from './pages/admin/OutreachQueue';
 import Hero from './components/Hero';
 import InfoSection from './components/InfoSection';
 import BusinessAuth from './components/BusinessAuth';
@@ -66,6 +70,7 @@ function LogoIcon({ className }) {
 function App() {
   const location = useLocation();
   const isBusinessPage = location.pathname.startsWith('/business');
+  const isAdminPage = location.pathname.startsWith('/admin');
   
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDarkHeader, setIsDarkHeader] = useState(true);
@@ -98,6 +103,20 @@ function App() {
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Admin paneli tanıtım sitesi kabuğundan (header/footer) tamamen bağımsızdır
+  if (isAdminPage) {
+    return (
+      <Routes>
+        <Route path="/admin" element={<AdminLogin />} />
+        <Route path="/admin/panel" element={<AdminLayout />}>
+          <Route index element={<Navigate to="isletmeler" replace />} />
+          <Route path="isletmeler" element={<BusinessApprovals />} />
+          <Route path="whatsapp" element={<OutreachQueue />} />
+        </Route>
+      </Routes>
+    );
+  }
 
   const useWhiteText = (!isScrolled || isDarkHeader) && !isBusinessPage;
 
