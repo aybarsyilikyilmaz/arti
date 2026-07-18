@@ -10,6 +10,7 @@ import * as adminService from '../../services/adminService';
 import { apiErrorMessage } from '../../services/api';
 import {
   GlassCard, StatusBadge, Spinner, EmptyState,
+  SuccessButton, GhostButton, DangerButton,
   useToasts, ToastStack, typeLabel, formatDate,
 } from '../../components/admin/AdminUI';
 
@@ -78,101 +79,102 @@ export default function BusinessApprovals() {
       {/* Başlık + sekmeler */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">İşletme Onayları</h1>
-          <p className="mt-0.5 text-sm text-white/40">{total} kayıt · vergi bilgisi yalnızca detayda görünür</p>
+          <h1 className="text-2xl font-bold tracking-tight text-white">İşletme Onayları</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            <span className="font-semibold text-slate-300">{total}</span> kayıt · vergi bilgisi yalnızca detayda görünür
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex rounded-xl border border-white/10 bg-white/5 p-1">
+          {/* Sekmeler — aktif pil süzülerek geçer */}
+          <div className="relative flex rounded-xl border border-white/10 bg-white/[0.04] p-1 backdrop-blur-md">
             {TABS.map((t) => (
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
-                  tab === t.key ? 'bg-emerald-400/15 text-emerald-300' : 'text-white/45 hover:text-white/70'
-                }`}
+                className="relative rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-colors duration-300"
               >
-                {t.label}
+                {tab === t.key && (
+                  <motion.span
+                    layoutId="approvals-tab-pill"
+                    transition={{ type: 'spring', damping: 30, stiffness: 350 }}
+                    className="absolute inset-0 rounded-lg bg-indigo-500/[0.16] ring-1 ring-inset ring-indigo-400/25"
+                  />
+                )}
+                <span className={`relative z-10 ${tab === t.key ? 'text-indigo-300' : 'text-slate-500 hover:text-slate-300'}`}>
+                  {t.label}
+                </span>
               </button>
             ))}
           </div>
-          <button
-            onClick={load}
-            className="rounded-xl border border-white/10 bg-white/5 p-2.5 text-white/50 transition hover:text-white"
-            title="Yenile"
-          >
+          <GhostButton onClick={load} className="p-2.5" title="Yenile">
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
+          </GhostButton>
         </div>
       </div>
 
       {/* Liste */}
-      <GlassCard className="overflow-hidden">
-        {loading ? (
-          <div className="flex justify-center py-16"><Spinner className="h-7 w-7" /></div>
-        ) : rows.length === 0 ? (
+      {loading ? (
+        <GlassCard><div className="flex justify-center py-20"><Spinner className="h-7 w-7" /></div></GlassCard>
+      ) : rows.length === 0 ? (
+        <GlassCard>
           <EmptyState
             icon={Building2}
             title={tab === 'PENDING_APPROVAL' ? 'Onay bekleyen işletme yok' : 'Bu durumda işletme yok'}
             hint="Yeni başvurular buraya düşer; onaylanmayan işletme kutu yayınlayamaz."
           />
-        ) : (
-          <ul className="divide-y divide-white/[0.06]">
-            <AnimatePresence initial={false}>
-              {rows.map((b) => (
-                <motion.li
-                  key={b._id}
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0, x: -24 }}
-                  className="flex flex-wrap items-center gap-4 px-5 py-4 transition hover:bg-white/[0.03]"
-                >
+        </GlassCard>
+      ) : (
+        <div className="space-y-3">
+          <AnimatePresence initial={false}>
+            {rows.map((b, i) => (
+              <motion.div
+                key={b._id}
+                layout
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0, transition: { delay: i * 0.04, duration: 0.35, ease: [0.22, 1, 0.36, 1] } }}
+                exit={{ opacity: 0, x: -32, transition: { duration: 0.25 } }}
+              >
+                <GlassCard interactive className="flex flex-wrap items-center gap-4 px-5 py-4">
                   <div className="flex min-w-0 flex-1 items-center gap-4">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br from-emerald-400/20 to-brand/20 text-sm font-bold text-emerald-300">
-                      {b.name?.charAt(0).toUpperCase()}
+                    {/* Avatar */}
+                    <div className="relative shrink-0">
+                      <div className="absolute inset-0 rounded-xl bg-indigo-500/25 blur-md" />
+                      <div className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br from-indigo-500/30 to-slate-800/60 text-sm font-bold text-indigo-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+                        {b.name?.charAt(0).toUpperCase()}
+                      </div>
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{b.name}</p>
-                      <p className="truncate text-xs text-white/40">
-                        {typeLabel(b.businessType)} · {b.email} · başvuru {formatDate(b.createdAt)}
+                      <p className="truncate text-sm font-semibold text-white">{b.name}</p>
+                      <p className="truncate text-xs text-slate-500">
+                        {typeLabel(b.businessType)} <span className="mx-1 text-slate-700">·</span> {b.email}
+                        <span className="mx-1 text-slate-700">·</span> başvuru {formatDate(b.createdAt)}
                       </p>
                     </div>
                   </div>
 
-                  <StatusBadge status={b.status} />
+                  <StatusBadge status={b.status} pulse={b.status === 'PENDING_APPROVAL'} />
 
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => openDetail(b._id)}
-                      className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/70 transition hover:bg-white/10"
-                    >
+                    <GhostButton onClick={() => openDetail(b._id)} className="px-3 py-1.5">
                       <Eye className="h-3.5 w-3.5" /> İncele
-                    </button>
+                    </GhostButton>
                     {b.status !== 'APPROVED' && (
-                      <button
-                        onClick={() => act(b._id, 'approve')}
-                        disabled={actionBusy === b._id}
-                        className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-emerald-950 transition hover:bg-emerald-400 disabled:opacity-50"
-                      >
+                      <SuccessButton onClick={() => act(b._id, 'approve')} disabled={actionBusy === b._id} className="px-3 py-1.5">
                         <BadgeCheck className="h-3.5 w-3.5" /> Onayla
-                      </button>
+                      </SuccessButton>
                     )}
                     {b.status !== 'SUSPENDED' && (
-                      <button
-                        onClick={() => act(b._id, 'suspend')}
-                        disabled={actionBusy === b._id}
-                        className="flex items-center gap-1.5 rounded-lg border border-rose-400/25 bg-rose-400/10 px-3 py-1.5 text-xs font-semibold text-rose-300 transition hover:bg-rose-400/20 disabled:opacity-50"
-                      >
+                      <DangerButton onClick={() => act(b._id, 'suspend')} disabled={actionBusy === b._id} className="px-3 py-1.5">
                         <PauseCircle className="h-3.5 w-3.5" /> Askıya Al
-                      </button>
+                      </DangerButton>
                     )}
                   </div>
-                </motion.li>
-              ))}
-            </AnimatePresence>
-          </ul>
-        )}
-      </GlassCard>
+                </GlassCard>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* Detay yan paneli */}
       <AnimatePresence>
@@ -181,12 +183,12 @@ export default function BusinessApprovals() {
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setDetail(null)}
-              className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+              className="fixed inset-0 z-40 bg-[#070b14]/70 backdrop-blur-sm"
             />
             <motion.aside
               initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-              className="fixed right-0 top-0 z-50 h-full w-full max-w-md overflow-y-auto border-l border-white/10 bg-[#0d241b]/95 p-6 backdrop-blur-2xl"
+              transition={{ type: 'spring', damping: 30, stiffness: 280 }}
+              className="fixed right-0 top-0 z-50 h-full w-full max-w-md overflow-y-auto border-l border-white/10 bg-[#0a101f]/90 p-6 backdrop-blur-2xl shadow-[-24px_0_80px_rgba(2,6,23,0.8)]"
             >
               {detailBusy || !detail ? (
                 <div className="flex h-full items-center justify-center"><Spinner className="h-7 w-7" /></div>
@@ -194,19 +196,22 @@ export default function BusinessApprovals() {
                 <>
                   <div className="mb-6 flex items-start justify-between">
                     <div>
-                      <h2 className="text-lg font-bold">{detail.name}</h2>
-                      <div className="mt-1.5 flex items-center gap-2">
+                      <h2 className="text-lg font-bold tracking-tight text-white">{detail.name}</h2>
+                      <div className="mt-2 flex items-center gap-2">
                         <StatusBadge status={detail.status} />
-                        <span className="text-xs text-white/40">{typeLabel(detail.businessType)}</span>
+                        <span className="text-xs text-slate-500">{typeLabel(detail.businessType)}</span>
                       </div>
                     </div>
-                    <button onClick={() => setDetail(null)} className="rounded-lg p-2 text-white/40 transition hover:bg-white/10 hover:text-white">
+                    <button
+                      onClick={() => setDetail(null)}
+                      className="rounded-lg p-2 text-slate-500 transition-all duration-300 hover:bg-white/[0.07] hover:text-white active:scale-95"
+                    >
                       <X className="h-5 w-5" />
                     </button>
                   </div>
 
-                  <div className="space-y-3">
-                    <DetailRow icon={FileDigit} label="Vergi No (KVKK — şifreli saklanır)" value={detail.taxNumber || '—'} mono />
+                  <div className="space-y-2.5">
+                    <DetailRow icon={FileDigit} label="Vergi No (KVKK — şifreli saklanır)" value={detail.taxNumber || '—'} mono highlight />
                     <DetailRow icon={Mail} label="E-posta" value={detail.email} />
                     <DetailRow icon={Phone} label="Telefon" value={detail.phone || detail.contactPhone || '—'} />
                     <DetailRow icon={Phone} label="WhatsApp" value={detail.whatsappPhone || '—'} />
@@ -224,22 +229,22 @@ export default function BusinessApprovals() {
 
                   <div className="mt-8 flex gap-3">
                     {detail.status !== 'APPROVED' && (
-                      <button
+                      <SuccessButton
                         onClick={() => act(detail._id, 'approve')}
                         disabled={actionBusy === detail._id}
-                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-sm font-bold text-emerald-950 transition hover:bg-emerald-400 disabled:opacity-50"
+                        className="flex-1 py-3 text-sm"
                       >
                         <BadgeCheck className="h-4 w-4" /> İşletmeyi Onayla
-                      </button>
+                      </SuccessButton>
                     )}
                     {detail.status !== 'SUSPENDED' && (
-                      <button
+                      <DangerButton
                         onClick={() => act(detail._id, 'suspend')}
                         disabled={actionBusy === detail._id}
-                        className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-rose-400/30 bg-rose-400/10 py-3 text-sm font-semibold text-rose-300 transition hover:bg-rose-400/20 disabled:opacity-50"
+                        className="flex-1 py-3 text-sm"
                       >
                         <PauseCircle className="h-4 w-4" /> Askıya Al
-                      </button>
+                      </DangerButton>
                     )}
                   </div>
                 </>
@@ -252,13 +257,15 @@ export default function BusinessApprovals() {
   );
 }
 
-function DetailRow({ icon: Icon, label, value, mono = false }) {
+function DetailRow({ icon: Icon, label, value, mono = false, highlight = false }) {
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-white/[0.07] bg-white/[0.04] px-4 py-3">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300/70" />
+    <div className={`flex items-start gap-3 rounded-xl border px-4 py-3 transition-all duration-300 ease-in-out hover:border-white/20 hover:bg-white/[0.06] ${
+      highlight ? 'border-indigo-400/20 bg-indigo-500/[0.07]' : 'border-white/[0.07] bg-white/[0.03]'
+    }`}>
+      <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${highlight ? 'text-indigo-300' : 'text-slate-500'}`} />
       <div className="min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-white/35">{label}</p>
-        <p className={`mt-0.5 break-words text-sm text-white/85 ${mono ? 'font-mono tracking-wider' : ''}`}>{value}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</p>
+        <p className={`mt-0.5 break-words text-sm text-slate-200 ${mono ? 'font-mono tracking-[0.15em]' : ''}`}>{value}</p>
       </div>
     </div>
   );
