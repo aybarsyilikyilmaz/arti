@@ -1,13 +1,7 @@
 const Business = require('../models/Business');
-const jwt = require('jsonwebtoken');
+const tokenService = require('../services/tokenService');
 
-const signToken = id => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'super-secret-arti-jwt-key-change-this', {
-    expiresIn: process.env.JWT_EXPIRES_IN || '90d'
-  });
-};
-
-exports.register = async (req, res) => {
+exports.register = async (req, res, next) => {
   try {
     const {
       name, email, phone, password, address, coordinates, businessType,
@@ -44,34 +38,34 @@ exports.register = async (req, res) => {
       dailyBoxCount,
       boxContents,
       pickupStart,
-      pickupEnd
+      pickupEnd,
+      kvkkConsentAt: new Date()
     });
 
-    const token = signToken(newBusiness._id);
-    newBusiness.password = undefined;
+    const accessToken = await tokenService.issueSession(res, newBusiness, 'business');
 
     res.status(201).json({
       status: 'success',
-      token,
-      data: {
-        business: newBusiness
-      }
+      accessToken,
+      message: 'Kaydınız alındı! Hesabınız ekibimizce doğrulandıktan sonra kutu yayınlayabileceksiniz.',
+      data: { business: newBusiness.toSafeJSON() }
     });
   } catch (err) {
-    res.status(400).json({
-      status: 'fail',
-      message: err.message
-    });
+    // İç detay sızdırma: yalnızca bilinen hata tipleri kullanıcıya yansıtılır
+    if (err.code === 11000) {
+      return res.status(400).json({ status: 'fail', message: 'Bu e-posta ile zaten bir hesap var.' });
+    }
+    if (err.name === 'ValidationError') {
+      const first = Object.values(err.errors)[0];
+      return res.status(400).json({ status: 'fail', message: first?.message || 'Geçersiz kayıt verisi.' });
+    }
+    next(err);
   }
 };
 
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ status: 'fail', message: 'Lütfen e-posta ve şifrenizi girin.' });
-    }
 
     const business = await Business.findOne({ email }).select('+password');
 
@@ -79,16 +73,35 @@ exports.login = async (req, res) => {
       return res.status(401).json({ status: 'fail', message: 'Hatalı e-posta veya şifre.' });
     }
 
-    const token = signToken(business._id);
+    const accessToken = await tokenService.issueSession(res, business, 'business');
 
     res.status(200).json({
       status: 'success',
-      token
+      accessToken,
+      data: { business: { id: business._id, name: business.name, status: business.status } }
     });
   } catch (err) {
-    res.status(400).json({
-      status: 'fail',
-      message: err.message
-    });
+    next(err);
+  }
+};
+
+exports.refresh = async (req, res, next) => {
+  try {
+    const session = await tokenService.rotateSession(req, res, Business, 'business');
+    if (!session) {
+      return res.status(401).json({ status: 'fail', message: 'Oturum geçersiz. Lütfen tekrar giriş yapın.' });
+    }
+    res.status(200).json({ status: 'success', accessToken: session.accessToken });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.logout = async (req, res, next) => {
+  try {
+    await tokenService.revokeSession(req, res, Business, 'business');
+    res.status(200).json({ status: 'success', message: 'Çıkış yapıldı.' });
+  } catch (err) {
+    next(err);
   }
 };

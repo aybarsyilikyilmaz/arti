@@ -150,6 +150,7 @@ export default function BusinessAuth() {
     email: '',
     password: '',
     passwordConfirm: '',
+    kvkkConsent: false,
   });
 
   const set = (key, value) => {
@@ -193,6 +194,7 @@ export default function BusinessAuth() {
       if (!formData.email.trim()) return 'E-posta adresinizi girin.';
       if (formData.password.length < 8) return 'Şifre en az 8 karakter olmalı.';
       if (formData.password !== formData.passwordConfirm) return 'Şifreler eşleşmiyor.';
+      if (!formData.kvkkConsent) return 'Devam etmek için KVKK aydınlatma metnini onaylamanız gerekir.';
     }
     return null;
   };
@@ -214,9 +216,10 @@ export default function BusinessAuth() {
     setLoading(true);
     setMessage(null);
     try {
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5002'}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // httpOnly refresh token cookie'si için
         body: JSON.stringify(payload),
       });
       const data = await response.json();
@@ -626,6 +629,21 @@ export default function BusinessAuth() {
                             <input name="passwordConfirm" type="password" value={formData.passwordConfirm} onChange={handleChange} className={inputCls} />
                           </Field>
                         </div>
+
+                        {/* KVKK açık rıza — backend bu onay olmadan kaydı reddeder */}
+                        <label className="flex items-start gap-3 p-4 rounded-2xl border border-gray-200 bg-gray-50 cursor-pointer hover:border-brand/40 transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={formData.kvkkConsent}
+                            onChange={(e) => set('kvkkConsent', e.target.checked)}
+                            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand focus:ring-brand"
+                          />
+                          <span className="text-xs text-gray-600 leading-relaxed">
+                            <a href="#" className="font-semibold text-brand hover:underline">KVKK Aydınlatma Metni</a>'ni okudum;
+                            işletme ve yetkili kişi bilgilerimin üyelik, faturalandırma ve yasal doğrulama amaçlarıyla
+                            işlenmesine açık rıza veriyorum.
+                          </span>
+                        </label>
                       </>
                     )}
                   </motion.div>

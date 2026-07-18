@@ -9,15 +9,25 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "bullmq": "^5.80.8",
+    "connect-timeout": "^1.9.1",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^7.1.5",
+    "express-slow-down": "^3.1.0",
     "helmet": "^7.1.0",
+    "hpp": "^0.2.3",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.0.3"
+    "mongoose": "^8.0.3",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.2",
+    "pino-pretty": "^13.1.3"
   }
 }
