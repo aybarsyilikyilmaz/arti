@@ -14,6 +14,7 @@ const checkoutLimiter = rateLimit({
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => require('../config/env').nodeEnv !== 'production',
   message: { status: 'fail', message: 'Çok fazla sipariş denemesi. Lütfen biraz bekleyin.' },
 });
 
