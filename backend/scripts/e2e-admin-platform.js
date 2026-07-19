@@ -140,7 +140,7 @@ async function main() {
     reviews.status === 200 && reviews.data?.data?.reviews?.some((r) => String(r._id) === String(review._id)));
 
   const del = await api(`/api/v1/admin/reviews/${review._id}`, { method: 'DELETE', token: adminToken });
-  check('Yorum silindi', del.status === 200);
+  check('Yorum silindi', del.status === 200, `Got status ${del.status}: ${JSON.stringify(del.data)}`);
 
   const delAgain = await api(`/api/v1/admin/reviews/${review._id}`, { method: 'DELETE', token: adminToken });
   check('Silinen yorum tekrar silinemedi (404)', delAgain.status === 404);

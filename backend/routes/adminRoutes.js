@@ -60,8 +60,8 @@ router.get('/users/:id', protect('admin'), adminPlatformController.getUserDetail
 router.patch('/users/:id/ban', protect('admin'), adminPlatformController.banUser);
 router.patch('/users/:id/unban', protect('admin'), adminPlatformController.unbanUser);
 router.get('/finance/overview', protect('admin'), adminPlatformController.financeOverview);
-router.post('/finance/payouts', protect('admin'), validateBody(createPayoutSchema), adminPlatformController.createPayout);
 router.get('/reviews', protect('admin'), validateQuery(listReviewsQuerySchema), adminPlatformController.listReviews);
+router.delete('/reviews/:id', protect('admin'), adminPlatformController.deleteReview);
 // Bilet Yönetimi (Destek)
 router.get('/tickets', protect('admin'), adminTicketController.listTickets);
 router.get('/tickets/:id', protect('admin'), adminTicketController.getTicket);

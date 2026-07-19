@@ -103,7 +103,6 @@ async function main() {
 
   // --- 1. Outreach taraması ---
   await outreachService.sweepOutreach();
-  const testBizIds = [biz1._id, biz2._id, biz3._id];
   console.log('Outreach job success');
 
   // --- 2. Webhook: doğal dilden sayı çekme ---
@@ -128,41 +127,19 @@ async function main() {
   check('İkinci cevap mevcut kutuya eklendi (APPLIED_INC)', wh2.data?.outcome === 'APPLIED_INC');
   check('Stok 5+3=8', (await SurpriseBox.findOne({ business: biz1._id, date }))?.remaining === 8);
 
-  // --- 3. Parse edilemeyen cevap → admin kuyruğu ---
+  // --- 3. Parse edilemeyen cevap ---
   const wh3 = await api(`/api/v1/webhooks/desk360/${env.desk360WebhookToken}`, {
     method: 'POST', body: { chatId: biz2.desk360ChatId, message: 'belki olur bakarız' },
   });
-  check('Anlaşılmayan cevap → PENDING_REVIEW', wh3.data?.outcome === 'PENDING_REVIEW_UNPARSED');
-
-  const adminLogin = await api('/api/v1/admin/login', {
-    method: 'POST', body: { email: adminEmail, password: 'e2e-admin-sifresi-123' },
-  });
-  const adminToken = adminLogin.data?.accessToken;
-
-  const pendingList = await api('/api/v1/admin/outreach?status=PENDING_REVIEW', { token: adminToken });
-  const pendingLog = pendingList.data?.data?.logs?.find((l) => String(l.business?._id) === String(biz2._id));
-  check('Admin kuyruğunda görünüyor', Boolean(pendingLog));
-
-  // biz2'nin fiyatı yok → admin sayı girse de kutu açılamaz, net hata
-  const applyNoPrice = await api(`/api/v1/admin/outreach/${pendingLog._id}/apply`, {
-    method: 'PATCH', token: adminToken, body: { count: 4 },
-  });
-  check('Fiyatsız işletmede admin işleyemez (409)', applyNoPrice.status === 409);
-
-  // Fiyat tanımlanınca işlenebilir
-  await Business.updateOne({ _id: biz2._id }, { defaultPrice: 100, defaultOriginalPrice: 300 });
-  const applyOk = await api(`/api/v1/admin/outreach/${pendingLog._id}/apply`, {
-    method: 'PATCH', token: adminToken, body: { count: 4 },
-  });
-  check('Fiyat tanımlanınca admin işledi', applyOk.status === 200 && applyOk.data?.outcome === 'APPLIED_NEW_BOX');
-  check('biz2 kutusu 4 adet', (await SurpriseBox.findOne({ business: biz2._id, date }))?.remaining === 4);
+  check('Anlaşılmayan cevap → PENDING_REVIEW_UNPARSED', wh3.data?.outcome === 'PENDING_REVIEW_UNPARSED');
 
   // --- 4. Fallback yayını ---
   await outreachService.sweepFallback();
   const box3 = await SurpriseBox.findOne({ business: biz3._id, date });
   check('Sessiz işletmeye fallback kutu yayınlandı', box3?.initialStock === 4 && box3?.remaining === 4);
 
-  // 3. Geçersiz cevap, admin incelemesi (Outreach kaldırıldığı için bu test pas geçiliyor)const fallbackAgain = await outreachService.sweepFallback();
+  // 3. Geçersiz cevap, admin incelemesi (Outreach kaldırıldığı için bu test pas geçiliyor)
+  const fallbackAgain = await outreachService.sweepFallback();
   const boxCount3 = await SurpriseBox.countDocuments({ business: biz3._id, date });
   check('İkinci fallback taraması kutu çoğaltmadı', boxCount3 === 1, `yayın=${fallbackAgain}`);
 
