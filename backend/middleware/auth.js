@@ -34,6 +34,39 @@ const protect = (...allowedRoles) => (req, res, next) => {
   next();
 };
 
+// RBAC: çalışan (Employee) yetki kontrolü. protect('business') çalışanı da
+// role:'business' olarak geçirir; allowedPages kısıtı YALNIZCA frontend menüsünde
+// uygulanıyordu — bu middleware onu backend'de zorunlu kılar.
+//   • Ana işletme sahibi (employeeId yok) → her zaman geçer.
+//   • Çalışan → verilen sayfalardan en az birine yetkili olmalı; yetkiler
+//     her istekte DB'den okunur ki yetki iptali anında geçerli olsun.
+const requirePage = (...pages) => async (req, res, next) => {
+  try {
+    if (!req.auth || !req.auth.employeeId) return next(); // ana hesap
+    const Employee = require('../models/Employee');
+    const employee = await Employee.findById(req.auth.employeeId).select('allowedPages');
+    if (!employee) {
+      return res.status(401).json({ status: 'fail', message: 'Çalışan kaydı bulunamadı.' });
+    }
+    const allowed = employee.allowedPages || [];
+    if (!pages.some((p) => allowed.includes(p))) {
+      return res.status(403).json({ status: 'fail', message: 'Bu bölüm için yetkiniz yok.' });
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Yalnızca ana işletme sahibine açık (çalışanlara tamamen kapalı).
+// IBAN, şube yönetimi gibi finansal/yapısal olarak kritik işlemler için.
+const requireOwner = (req, res, next) => {
+  if (req.auth && req.auth.employeeId) {
+    return res.status(403).json({ status: 'fail', message: 'Bu işlem yalnızca işletme sahibine açıktır.' });
+  }
+  next();
+};
+
 // Kutu yayınlama gibi işlemler yalnızca onaylı işletmelere açık (PLAN.md §2)
 const requireApprovedBusiness = async (req, res, next) => {
   try {
@@ -56,4 +89,4 @@ const requireApprovedBusiness = async (req, res, next) => {
   }
 };
 
-module.exports = { protect, requireApprovedBusiness };
+module.exports = { protect, requireApprovedBusiness, requirePage, requireOwner };

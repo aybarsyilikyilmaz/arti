@@ -68,3 +68,6 @@ jobs:
 
       - name: Admin platform duman testi (dashboard/sipariş/kullanıcı/finans/yorum)
         run: node scripts/e2e-admin-platform.js
+
+      - name: Güvenlik regresyon testi (RBAC / çift-hash / regex enjeksiyon)
+        run: node scripts/e2e-security.js

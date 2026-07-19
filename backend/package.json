@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "e2e": "node scripts/e2e-smoke.js && node scripts/e2e-faz2.js && node scripts/e2e-faz3.js && node scripts/e2e-faz4.js && node scripts/e2e-admin-detail.js && node scripts/e2e-admin-platform.js"
+    "e2e": "node scripts/e2e-smoke.js && node scripts/e2e-faz2.js && node scripts/e2e-faz3.js && node scripts/e2e-faz4.js && node scripts/e2e-admin-detail.js && node scripts/e2e-admin-platform.js && node scripts/e2e-security.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1090.0",

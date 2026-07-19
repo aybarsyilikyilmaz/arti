@@ -10,7 +10,10 @@ const Payout = require('../models/Payout');
 const Review = require('../models/Review');
 const financeService = require('../services/financeService');
 const { todayIstanbul } = require('../utils/time');
-const bcrypt = require('bcryptjs');
+
+// Kullanıcı girişli regex aramalarında özel karakterleri etkisizleştirir
+// (ReDoS + operatör enjeksiyonu koruması).
+const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const REVENUE_STATUSES = ['PAID', 'PICKED_UP'];
 
@@ -96,7 +99,7 @@ exports.dashboard = async (req, res, next) => {
 /* ------------------------------------------------------------------ */
 exports.createBusiness = async (req, res, next) => {
   try {
-    const { email, password, phone, ...rest } = req.body;
+    const { email, phone } = req.body;
 
     // Tekillik kontrolü
     const exists = await Business.findOne({ $or: [{ email }, { phone }] }).select('_id');
@@ -104,14 +107,12 @@ exports.createBusiness = async (req, res, next) => {
       return res.status(400).json({ status: 'fail', message: 'Bu e-posta veya telefon numarası zaten kullanımda.' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
-
+    // Şifre burada elle hash'lenMEZ — Business modelinin pre('save') hook'u
+    // hash'ler. Elle hash + hook = çift hash olur, hesap giriş yapamaz.
     const business = new Business({
-      ...rest,
-      email,
-      phone,
-      password: hashedPassword,
+      ...req.body, // adminCreateBusinessSchema ile whitelist'lenmiş temiz gövde
       status: 'APPROVED', // Admin yarattığı için doğrudan onaylı
+      kvkkConsentAt: new Date(),
     });
 
     await business.save();
@@ -137,7 +138,7 @@ exports.listAllOrders = async (req, res, next) => {
 
     // q: müşteri adı/e-postası — önce eşleşen kullanıcılar bulunur
     if (q) {
-      const re = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const re = new RegExp(escapeRegex(q.trim()), 'i');
       const users = await User.find({ $or: [{ email: re }, { name: re }] }).select('_id').limit(200);
       filter.user = { $in: users.map((u) => u._id) };
     }
@@ -171,7 +172,7 @@ exports.listUsers = async (req, res, next) => {
     const { q, banned, page, limit } = req.query;
     const filter = {};
     if (q) {
-      const re = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const re = new RegExp(escapeRegex(q.trim()), 'i');
       filter.$or = [{ email: re }, { name: re }, { phone: re }];
     }
     if (banned === 'true') filter.bannedAt = { $ne: null };

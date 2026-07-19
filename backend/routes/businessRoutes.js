@@ -4,7 +4,7 @@ const boxController = require('../controllers/boxController');
 const orderController = require('../controllers/orderController');
 const { authLimiter, authSlowDown } = require('../middleware/rateLimiters');
 const { validateBody, validateQuery } = require('../middleware/validate');
-const { protect, requireApprovedBusiness } = require('../middleware/auth');
+const { protect, requireApprovedBusiness, requirePage, requireOwner } = require('../middleware/auth');
 const { registerSchema, loginSchema, profileSchema, createBranchSchema } = require('../schemas/businessSchemas');
 const { upsertBoxSchema, verifyQrSchema } = require('../schemas/boxSchemas');
 const { presignSchema, setImagesSchema } = require('../schemas/uploadSchemas');
@@ -28,20 +28,21 @@ router.post('/logout', businessController.logout);
 // Yalnızca işletme profili tamamlamak vs.
 
 router.get('/branches', protect('business'), businessController.getBranches);
-router.post('/branches', protect('business'), validateBody(createBranchSchema), businessController.createBranch);
-router.post('/switch-branch', protect('business'), businessController.switchBranch);
+// Şube açma/değiştirme yapısal işlemdir — yalnızca işletme sahibi
+router.post('/branches', protect('business'), requireOwner, validateBody(createBranchSchema), businessController.createBranch);
+router.post('/switch-branch', protect('business'), requireOwner, businessController.switchBranch);
 
-// Kutu yayınlama/güncelleme işlemleri ONAY gerektirir (PLAN.md §2)
-router.post('/boxes', protect('business'), requireApprovedBusiness, validateBody(upsertBoxSchema), boxController.upsertTodayBox);
+// Kutu yayınlama/güncelleme işlemleri ONAY gerektirir (PLAN.md §2) + 'kutu' yetkisi
+router.post('/boxes', protect('business'), requirePage('kutu'), requireApprovedBusiness, validateBody(upsertBoxSchema), boxController.upsertTodayBox);
 router.get('/boxes/today', protect('business'), boxController.getTodayBox);
 
-// QR ile Teslimat Onayı
-router.post('/orders/verify', protect('business'), validateBody(verifyQrSchema), orderController.verifyPickup);
+// QR ile Teslimat Onayı — kutu ya da sipariş yetkisi olan çalışan yapabilir
+router.post('/orders/verify', protect('business'), requirePage('kutu', 'siparisler'), validateBody(verifyQrSchema), orderController.verifyPickup);
 
-// Profil & Ayarlar
+// Profil & Ayarlar — profil/ayarlar yetkisi gerekir
 router.get('/me', protect('business'), businessController.getMe);
-router.patch('/profile', protect('business'), validateBody(profileSchema), businessController.updateProfile);
-router.post('/profile/update-request', protect('business'), businessController.updateProfileRequest);
+router.patch('/profile', protect('business'), requirePage('profil', 'ayarlar'), validateBody(profileSchema), businessController.updateProfile);
+router.post('/profile/update-request', protect('business'), requirePage('profil', 'ayarlar'), businessController.updateProfileRequest);
 
 // Analiz & Raporlar
 router.get('/reports/summary', protect('business'), validateQuery(summaryQuerySchema), reportController.summary);
@@ -60,14 +61,14 @@ router.get('/notifications', protect('business'), notificationController.getBusi
 router.patch('/notifications/read-all', protect('business'), notificationController.markAllAsRead);
 router.patch('/notifications/:id/read', protect('business'), notificationController.markAsRead);
 
-// Görsel Yüklemeleri (Presigned URL + S3)
-router.post('/uploads/presign', protect('business'), validateBody(presignSchema), uploadController.presign);
-router.patch('/profile/images', protect('business'), validateBody(setImagesSchema), uploadController.setImages);
+// Görsel Yüklemeleri (Presigned URL + S3) — vitrin yetkisi
+router.post('/uploads/presign', protect('business'), requirePage('vitrin'), validateBody(presignSchema), uploadController.presign);
+router.patch('/profile/images', protect('business'), requirePage('vitrin'), validateBody(setImagesSchema), uploadController.setImages);
 
-// Finans & Ödemeler
-router.get('/finance/overview', protect('business'), financeController.getOverview);
-router.patch('/finance/iban', protect('business'), financeController.updateIban);
-router.get('/finance/payouts', protect('business'), financeController.getPayouts);
+// Finans & Ödemeler — okuma 'finans' yetkisi ister; IBAN değişikliği yalnızca sahibe açık
+router.get('/finance/overview', protect('business'), requirePage('finans'), financeController.getOverview);
+router.patch('/finance/iban', protect('business'), requireOwner, financeController.updateIban);
+router.get('/finance/payouts', protect('business'), requirePage('finans'), financeController.getPayouts);
 
 // Ekip / Çalışan Yönetimi (RBAC)
 router.get('/employees', protect('business'), employeeController.getEmployees);

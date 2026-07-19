@@ -2,6 +2,9 @@ const Ticket = require('../models/Ticket');
 const User = require('../models/User');
 const Business = require('../models/Business');
 
+// Kullanıcı girişli regex aramada özel karakterleri etkisizleştirir (ReDoS + enjeksiyon)
+const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // Admin: Tüm biletleri listele (Kullanıcı / İşletme filtrelemeli)
 exports.listTickets = async (req, res, next) => {
   try {
@@ -18,7 +21,7 @@ exports.listTickets = async (req, res, next) => {
     }
     
     if (search) {
-      const regex = new RegExp(search, 'i');
+      const regex = new RegExp(escapeRegex(search), 'i');
       if (type === 'user') {
         const users = await User.find({ $or: [{ name: regex }, { email: regex }] }, '_id');
         filter.user = { $in: users.map(u => u._id) };

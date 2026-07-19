@@ -5,6 +5,7 @@ const { validateBody } = require('../middleware/validate');
 const { protect } = require('../middleware/auth');
 const { checkoutSchema } = require('../schemas/boxSchemas');
 const rateLimit = require('express-rate-limit');
+const env = require('../config/env');
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ const checkoutLimiter = rateLimit({
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => require('../config/env').nodeEnv !== 'production',
+  skip: () => env.nodeEnv !== 'production',
   message: { status: 'fail', message: 'Çok fazla sipariş denemesi. Lütfen biraz bekleyin.' },
 });
 
