@@ -64,3 +64,25 @@ const loginSchema = z.object({
 });
 
 module.exports = { registerSchema, loginSchema };
+
+// Panel ayarları — HH:MM saat formatı, mantık kuralları zod'da (PLAN.md §6.8)
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+const profileSchema = z
+  .object({
+    defaultPackageCount: z.number().int().min(0, 'Negatif olamaz.').max(200, 'En fazla 200.').optional(),
+    defaultPrice: z.number().min(1, 'En az 1 TL.').max(100000).optional(),
+    defaultOriginalPrice: z.number().min(1, 'En az 1 TL.').max(100000).optional(),
+    pickupStart: z.string().regex(HHMM, 'Saat SS:DD formatında olmalı.').optional(),
+    pickupEnd: z.string().regex(HHMM, 'Saat SS:DD formatında olmalı.').optional(),
+    whatsappPhone: z.string().trim().max(20).optional(),
+    contactPhone: z.string().trim().max(20).optional(),
+    boxContents: z.array(z.enum(['unlu', 'sicak', 'meze', 'manav', 'karisik', 'vegan'])).optional(),
+  })
+  .refine((d) => !(d.pickupStart && d.pickupEnd) || d.pickupStart < d.pickupEnd, {
+    message: 'Teslim bitişi başlangıçtan sonra olmalı.',
+  })
+  .refine((d) => !(d.defaultPrice && d.defaultOriginalPrice) || d.defaultPrice < d.defaultOriginalPrice, {
+    message: 'İndirimli fiyat, normal fiyattan düşük olmalı.',
+  });
+
+module.exports.profileSchema = profileSchema;

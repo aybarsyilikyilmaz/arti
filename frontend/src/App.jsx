@@ -4,6 +4,11 @@ import AdminLogin from './pages/admin/AdminLogin';
 import AdminLayout from './pages/admin/AdminLayout';
 import BusinessApprovals from './pages/admin/BusinessApprovals';
 import OutreachQueue from './pages/admin/OutreachQueue';
+import BusinessLogin from './pages/business/BusinessLogin';
+import BusinessLayout from './pages/business/BusinessLayout';
+import Overview from './pages/business/Overview';
+import BoxManager from './pages/business/BoxManager';
+import BusinessSettings from './pages/business/BusinessSettings';
 import Hero from './components/Hero';
 import InfoSection from './components/InfoSection';
 import BusinessAuth from './components/BusinessAuth';
@@ -71,6 +76,7 @@ function App() {
   const location = useLocation();
   const isBusinessPage = location.pathname.startsWith('/business');
   const isAdminPage = location.pathname.startsWith('/admin');
+  const isPanelPage = location.pathname.startsWith('/panel');
   
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDarkHeader, setIsDarkHeader] = useState(true);
@@ -104,8 +110,8 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Admin paneli tanıtım sitesi kabuğundan (header/footer) tamamen bağımsızdır
-  if (isAdminPage) {
+  // Admin ve işletme panelleri tanıtım sitesi kabuğundan (header/footer) bağımsızdır
+  if (isAdminPage || isPanelPage) {
     return (
       <Routes>
         <Route path="/admin" element={<AdminLogin />} />
@@ -113,6 +119,12 @@ function App() {
           <Route index element={<Navigate to="isletmeler" replace />} />
           <Route path="isletmeler" element={<BusinessApprovals />} />
           <Route path="whatsapp" element={<OutreachQueue />} />
+        </Route>
+        <Route path="/panel" element={<BusinessLogin />} />
+        <Route path="/panel" element={<BusinessLayout />}>
+          <Route path="genel-bakis" element={<Overview />} />
+          <Route path="kutu" element={<BoxManager />} />
+          <Route path="ayarlar" element={<BusinessSettings />} />
         </Route>
       </Routes>
     );

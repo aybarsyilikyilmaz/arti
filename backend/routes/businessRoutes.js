@@ -5,7 +5,7 @@ const orderController = require('../controllers/orderController');
 const { authLimiter, authSlowDown } = require('../middleware/rateLimiters');
 const { validateBody, validateQuery } = require('../middleware/validate');
 const { protect, requireApprovedBusiness } = require('../middleware/auth');
-const { registerSchema, loginSchema } = require('../schemas/businessSchemas');
+const { registerSchema, loginSchema, profileSchema } = require('../schemas/businessSchemas');
 const { upsertBoxSchema, verifyQrSchema } = require('../schemas/boxSchemas');
 const { presignSchema, setImagesSchema } = require('../schemas/uploadSchemas');
 const uploadController = require('../controllers/uploadController');
@@ -26,6 +26,10 @@ router.get('/boxes/today', protect('business'), boxController.getTodayBox);
 
 // QR teslim onayı
 router.post('/orders/verify', protect('business'), validateBody(verifyQrSchema), orderController.verifyPickup);
+
+// Panel profili: işletme kendi bilgisini görür, otomasyon varsayılanlarını yönetir
+router.get('/me', protect('business'), businessController.getMe);
+router.patch('/profile', protect('business'), validateBody(profileSchema), businessController.updateProfile);
 
 // Panel raporu: bugünün kutusu + dönem ciro/sipariş özeti (PLAN.md Faz 4)
 router.get('/reports/summary', protect('business'), validateQuery(summaryQuerySchema), reportController.summary);

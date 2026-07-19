@@ -105,3 +105,39 @@ exports.logout = async (req, res, next) => {
     next(err);
   }
 };
+
+// --- İşletme paneli (Faz 4 frontend) ---
+
+exports.getMe = async (req, res, next) => {
+  try {
+    const Business = require('../models/Business');
+    const business = await Business.findById(req.auth.id);
+    if (!business) return res.status(404).json({ status: 'fail', message: 'İşletme bulunamadı.' });
+    res.status(200).json({ status: 'success', data: { business: business.toSafeJSON() } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Yalnızca panelden yönetilebilir alanlar güncellenir (e-posta/VKN/status ASLA)
+exports.updateProfile = async (req, res, next) => {
+  try {
+    const Business = require('../models/Business');
+    const ALLOWED = [
+      'defaultPackageCount', 'defaultPrice', 'defaultOriginalPrice',
+      'pickupStart', 'pickupEnd', 'whatsappPhone', 'contactPhone', 'boxContents',
+    ];
+    const update = {};
+    for (const key of ALLOWED) {
+      if (req.body[key] !== undefined) update[key] = req.body[key];
+    }
+    const business = await Business.findByIdAndUpdate(req.auth.id, update, {
+      new: true,
+      runValidators: true,
+    });
+    if (!business) return res.status(404).json({ status: 'fail', message: 'İşletme bulunamadı.' });
+    res.status(200).json({ status: 'success', message: 'Ayarlar kaydedildi.', data: { business: business.toSafeJSON() } });
+  } catch (err) {
+    next(err);
+  }
+};
