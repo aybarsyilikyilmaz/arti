@@ -4,7 +4,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Package, Settings, LogOut, Store, Hourglass, ImageIcon } from 'lucide-react';
+import { LayoutDashboard, Package, Settings, LogOut, Store, Hourglass, ImageIcon, Bell, User } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import * as businessService from '../../services/businessService';
 import { Spinner, StatusBadge } from '../../components/admin/AdminUI';
@@ -21,9 +21,17 @@ export default function BusinessLayout() {
   const location = useLocation();
   const { authed, restoring, logout } = useAuth('business');
   const [me, setMe] = useState(null);
+  const [todayOrderCount, setTodayOrderCount] = useState(0);
 
   const reloadMe = useCallback(async () => {
-    try { setMe(await businessService.getMe()); } catch { /* guard yakalar */ }
+    try {
+      const [profile, summary] = await Promise.all([
+        businessService.getMe(),
+        businessService.getSummary(1).catch(() => null),
+      ]);
+      setMe(profile);
+      if (summary) setTodayOrderCount(summary.todayOrderCount || 0);
+    } catch { /* guard yakalar */ }
   }, []);
 
   useEffect(() => { if (authed) reloadMe(); }, [authed, reloadMe]);
@@ -119,6 +127,41 @@ export default function BusinessLayout() {
 
         {/* İçerik */}
         <main className="min-w-0 flex-1">
+          {/* Üst Bar: Bildirim Çanı + Profil */}
+          <div className="mb-5 flex items-center justify-end gap-3">
+            {/* Bildirim çanı */}
+            <button
+              className="relative rounded-xl border border-gray-200 bg-white p-2.5 text-gray-400 shadow-sm transition-all duration-300 hover:bg-gray-50 hover:text-gray-600 hover:shadow-md active:scale-95"
+              title="Bugünkü siparişler"
+            >
+              <Bell className="h-[18px] w-[18px]" />
+              {todayOrderCount > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white shadow-lg shadow-emerald-200"
+                >
+                  {todayOrderCount > 99 ? '99+' : todayOrderCount}
+                </motion.span>
+              )}
+            </button>
+
+            {/* Profil */}
+            <div className="flex items-center gap-2.5 rounded-xl border border-gray-200 bg-white px-3 py-2 shadow-sm">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600">
+                {me?.logoUrl ? (
+                  <img src={me.logoUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <User className="h-4 w-4 text-white" />
+                )}
+              </div>
+              <div className="hidden min-w-0 sm:block">
+                <p className="truncate text-xs font-semibold text-gray-700">{me?.name || 'İşletme'}</p>
+                <p className="text-[10px] text-gray-400">{me?.email || ''}</p>
+              </div>
+            </div>
+          </div>
+
           {/* Onay bekliyor / askıda uyarısı */}
           {me && me.status !== 'APPROVED' && (
             <motion.div

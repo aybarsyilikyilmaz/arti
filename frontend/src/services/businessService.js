@@ -23,6 +23,10 @@ export const verifyPickup = (qrToken) =>
 export const getSummary = (days = 7) =>
   api.get('/business/reports/summary', { params: { days } }).then((r) => r.data.data);
 
+// Son siparişler: aktivite akışı (Genel Bakış sayfası)
+export const getRecentOrders = () =>
+  api.get('/business/orders/recent').then((r) => r.data.data.orders);
+
 // Vitrin görselleri — presigned akış: izin al → dosyayı doğrudan depoya PUT et
 // (lokalde API'ye, üretimde S3'e; istemci tarafında hiçbir fark yok)
 export const uploadImage = async (kind, file) => {

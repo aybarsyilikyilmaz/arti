@@ -34,6 +34,9 @@ router.patch('/profile', protect('business'), validateBody(profileSchema), busin
 // Panel raporu: bugünün kutusu + dönem ciro/sipariş özeti (PLAN.md Faz 4)
 router.get('/reports/summary', protect('business'), validateQuery(summaryQuerySchema), reportController.summary);
 
+// Son siparişler: aktivite akışı (Genel Bakış sayfası)
+router.get('/orders/recent', protect('business'), reportController.recentOrders);
+
 // Görsel yükleme: presigned URL al → dosyayı PUT et → profiline yaz (PLAN.md §1)
 router.post('/uploads/presign', protect('business'), validateBody(presignSchema), uploadController.presign);
 router.patch('/profile/images', protect('business'), validateBody(setImagesSchema), uploadController.setImages);
