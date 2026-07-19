@@ -30,7 +30,7 @@ async function main() {
 
   const ortak = {
     phone: '02121112233',
-    password: 'demo-sifre-1234',
+    password: 'artidemo123',
     address: 'Caferağa Mah. Moda Cad. No:18, Kadıköy/İstanbul',
     boxContents: ['unlu'],
     kvkkConsentAt: new Date(),
@@ -103,7 +103,7 @@ async function main() {
   console.log('  • 3 onay bekleyen işletme (Admin → İşletme Onayları)');
   console.log('  • 2 PENDING_REVIEW WhatsApp cevabı (Admin → WhatsApp Kuyruğu)');
   console.log('  • "Baklavacı Hüsnü Usta"nın varsayılan fiyatı YOK → Stoka İşle 409 verir (beklenen)');
-  console.log('  • İşletme paneli: simit@demo.arti.dev / demo-sifre-1234');
+  console.log('  • İşletme paneli: simit@demo.arti.dev / artidemo123');
   console.log(`    → 7 güne yayılmış ${orders.length} sipariş, bugünün kutusu 8/3 (satılan 5)`);
   process.exit(0);
 }

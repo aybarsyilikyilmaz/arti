@@ -8,7 +8,9 @@ const upsertBoxSchema = z
     price: z.number({ message: 'Fiyat zorunludur.' }).positive('Fiyat pozitif olmalı.').max(100000),
     originalPrice: z.number({ message: 'Normal fiyat zorunludur.' }).positive().max(100000),
     initialStock: z.number({ message: 'Stok adedi zorunludur.' }).int().min(1, 'En az 1 kutu.').max(500),
-    contents: z.array(z.enum(['unlu', 'sicak', 'meze', 'manav', 'karisik', 'vegan'])).min(1, 'En az bir içerik seçin.'),
+    contents: z.array(z.enum(['unlu', 'sicak', 'meze', 'manav', 'karisik', 'vegan', 'tatli', 'sandvic', 'sarkuteri', 'et', 'glutensiz', 'fastfood']))
+      .min(1, 'En az bir içerik seçin.')
+      .max(2, 'Uygulamada karışık görünmemesi için en fazla 2 içerik seçilebilir.'),
     pickupStart: z.string().regex(TIME_RE, 'Saat SS:DD biçiminde olmalı.'),
     pickupEnd: z.string().regex(TIME_RE, 'Saat SS:DD biçiminde olmalı.'),
   })

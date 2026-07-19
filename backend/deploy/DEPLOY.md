@@ -97,4 +97,5 @@ staging/test verisiyle koş** — gerçek sipariş üretir.
 - [ ] Frontend `VITE_API_URL=https://api.artiapp.com.tr` ile build alındı
 - [ ] Presign → S3 PUT → görsel CloudFront'tan açılıyor
 - [ ] Webhook uçları imza/token olmadan 401 veriyor
+- [ ] Auth rate limitleri aktif (dev'de kapalıdır; NODE_ENV=production ile otomatik açılır — 11. hatalı girişte 429 dönmeli)
 - [ ] `pm2 startup` kayıtlı (reboot testi yap)

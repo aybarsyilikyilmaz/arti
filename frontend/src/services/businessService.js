@@ -22,3 +22,17 @@ export const verifyPickup = (qrToken) =>
 // Rapor: bugün + son N gün ciro/sipariş (PLAN.md Faz 4)
 export const getSummary = (days = 7) =>
   api.get('/business/reports/summary', { params: { days } }).then((r) => r.data.data);
+
+// Vitrin görselleri — presigned akış: izin al → dosyayı doğrudan depoya PUT et
+// (lokalde API'ye, üretimde S3'e; istemci tarafında hiçbir fark yok)
+export const uploadImage = async (kind, file) => {
+  const grant = await api
+    .post('/business/uploads/presign', { kind, contentType: file.type })
+    .then((r) => r.data.data);
+  const put = await fetch(grant.uploadUrl, { method: 'PUT', headers: grant.headers, body: file });
+  if (!put.ok) throw new Error('Görsel yüklenemedi.');
+  return grant.publicUrl;
+};
+
+export const setImages = (payload) =>
+  api.patch('/business/profile/images', payload).then((r) => r.data);

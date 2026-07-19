@@ -1,16 +1,18 @@
 // İşletme paneli kabuğu: guard + sidebar + onay durumu banner'ı.
-// İşletme profili (me) burada bir kez yüklenir, sayfalara Outlet context ile iner.
+// Panelin TAMAMI aydınlık temadadır (kullanıcı talebi) — koyu tema yalnızca
+// admin panelinde kalır. Sidebar'da işletmenin yüklediği logo görünür.
 import React, { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Package, Settings, LogOut, Store, Hourglass } from 'lucide-react';
+import { LayoutDashboard, Package, Settings, LogOut, Store, Hourglass, ImageIcon } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import * as businessService from '../../services/businessService';
-import { AdminBackdrop, Spinner, StatusBadge } from '../../components/admin/AdminUI';
+import { Spinner, StatusBadge } from '../../components/admin/AdminUI';
 
 const NAV = [
   { to: 'genel-bakis', label: 'Genel Bakış', icon: LayoutDashboard },
   { to: 'kutu', label: 'Kutu & Teslimat', icon: Package },
+  { to: 'vitrin', label: 'Vitrin Yönetimi', icon: ImageIcon },
   { to: 'ayarlar', label: 'Ayarlar', icon: Settings },
 ];
 
@@ -28,51 +30,53 @@ export default function BusinessLayout() {
 
   if (restoring) {
     return (
-      <div className="font-admin relative flex min-h-screen items-center justify-center">
-        <AdminBackdrop />
-        <div className="relative flex flex-col items-center gap-3">
+      <div className="font-admin flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-3">
           <Spinner className="h-8 w-8" />
-          <p className="text-sm text-slate-500">Oturum doğrulanıyor…</p>
+          <p className="text-sm text-gray-400">Oturum doğrulanıyor…</p>
         </div>
       </div>
     );
   }
 
-  if (!authed) return <Navigate to="/panel" replace />;
+  // Giriş yapılmamışsa /business sihirbazının giriş moduna gönderilir
+  if (!authed) return <Navigate to="/business" state={{ mode: 'login' }} replace />;
 
   const handleLogout = async () => {
     await logout();
-    navigate('/panel', { replace: true });
+    navigate('/business', { state: { mode: 'login' }, replace: true });
   };
 
   return (
-    <div className="font-admin relative min-h-screen text-slate-200 antialiased">
-      <AdminBackdrop />
-
+    <div className="font-admin relative min-h-screen bg-gray-50 text-gray-900 antialiased">
       <div className="relative mx-auto flex max-w-7xl gap-6 px-4 py-6 sm:px-6">
         {/* Sidebar */}
         <motion.aside
           initial={{ opacity: 0, x: -16 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          className="sticky top-6 flex h-[calc(100vh-3rem)] w-16 shrink-0 flex-col rounded-2xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur-2xl shadow-[0_8px_40px_rgba(2,6,23,0.5),inset_0_1px_0_rgba(255,255,255,0.06)] lg:w-64 lg:p-4"
+          className="sticky top-6 flex h-[calc(100vh-3rem)] w-16 shrink-0 flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-xl shadow-gray-200/60 lg:w-64 lg:p-4"
         >
-          {/* Marka + işletme adı */}
+          {/* Marka — logo yüklendiyse o görünür */}
           <div className="mb-8 flex items-center gap-3 px-1 lg:px-2">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-xl bg-emerald-500/40 blur-lg" />
-              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]">
-                <Store className="h-5 w-5 text-white" />
-              </div>
+            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-gray-100 shadow-sm">
+              {me?.logoUrl ? (
+                <img src={me.logoUrl} alt="logo" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-500 to-emerald-700">
+                  <Store className="h-5 w-5 text-white" />
+                </div>
+              )}
             </div>
             <div className="hidden min-w-0 lg:block">
-              <p className="truncate text-sm font-bold leading-tight tracking-tight text-white">
+              <p className="truncate text-sm font-bold leading-tight tracking-tight text-gray-900">
                 {me?.name || 'İşletme Paneli'}
               </p>
-              <p className="text-[11px] font-medium text-slate-500">Artı+ İşletme</p>
+              <p className="text-[11px] font-medium text-gray-400">Artı+ İşletme</p>
             </div>
           </div>
 
+          {/* Menü — aktif pil sekmeler arasında süzülür */}
           <nav className="flex flex-1 flex-col gap-1">
             {NAV.map(({ to, label, icon: Icon }) => {
               const active = location.pathname.endsWith(`/${to}`);
@@ -86,11 +90,15 @@ export default function BusinessLayout() {
                     <motion.span
                       layoutId="biz-nav-pill"
                       transition={{ type: 'spring', damping: 30, stiffness: 350 }}
-                      className="absolute inset-0 rounded-xl border border-emerald-400/25 bg-emerald-500/[0.13] shadow-[0_0_24px_rgba(16,185,129,0.15),inset_0_1px_0_rgba(255,255,255,0.06)]"
+                      className="absolute inset-0 rounded-xl border border-emerald-200 bg-emerald-50"
                     />
                   )}
-                  <Icon className={`relative z-10 h-[18px] w-[18px] shrink-0 transition-colors duration-300 ${active ? 'text-emerald-300' : 'text-slate-500 group-hover:text-slate-300'}`} />
-                  <span className={`relative z-10 hidden transition-colors duration-300 lg:inline ${active ? 'text-emerald-200' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                  <Icon className={`relative z-10 h-[18px] w-[18px] shrink-0 transition-colors duration-300 ${
+                    active ? 'text-emerald-600' : 'text-gray-400 group-hover:text-gray-600'
+                  }`} />
+                  <span className={`relative z-10 hidden transition-colors duration-300 lg:inline ${
+                    active ? 'text-emerald-700' : 'text-gray-500 group-hover:text-gray-800'
+                  }`}>
                     {label}
                   </span>
                 </NavLink>
@@ -98,10 +106,10 @@ export default function BusinessLayout() {
             })}
           </nav>
 
-          <div className="border-t border-white/[0.06] pt-3">
+          <div className="border-t border-gray-100 pt-3">
             <button
               onClick={handleLogout}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition-all duration-300 ease-in-out hover:bg-rose-500/10 hover:text-rose-300 active:scale-95"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-400 transition-all duration-300 ease-in-out hover:bg-rose-50 hover:text-rose-500 active:scale-95"
             >
               <LogOut className="h-[18px] w-[18px] shrink-0" />
               <span className="hidden lg:inline">Çıkış Yap</span>
@@ -115,20 +123,20 @@ export default function BusinessLayout() {
           {me && me.status !== 'APPROVED' && (
             <motion.div
               initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-              className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/[0.07] px-5 py-4 backdrop-blur-xl"
+              className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4"
             >
-              <Hourglass className="h-5 w-5 shrink-0 text-amber-400" />
+              <Hourglass className="h-5 w-5 shrink-0 text-amber-500" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-amber-300">
+                <p className="text-sm font-semibold text-amber-700">
                   {me.status === 'PENDING_APPROVAL' ? 'Başvurun inceleniyor' : 'Hesabın askıya alındı'}
                 </p>
-                <p className="mt-0.5 text-xs text-amber-200/60">
+                <p className="mt-0.5 text-xs text-amber-600/80">
                   {me.status === 'PENDING_APPROVAL'
                     ? 'Ekibimiz vergi bilgilerini doğruladıktan sonra kutu yayınlayabileceksin. Ayarlarını şimdiden yapabilirsin.'
                     : 'Kutu yayınlama kapalı. Destek için bizimle iletişime geç.'}
                 </p>
               </div>
-              <StatusBadge status={me.status} pulse={me.status === 'PENDING_APPROVAL'} />
+              <StatusBadge status={me.status} pulse={me.status === 'PENDING_APPROVAL'} light />
             </motion.div>
           )}
 

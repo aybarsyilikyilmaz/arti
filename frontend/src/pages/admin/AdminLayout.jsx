@@ -29,11 +29,12 @@ export default function AdminLayout() {
     );
   }
 
-  if (!authed) return <Navigate to="/admin" replace />;
+  // Giriş tek kapıdan: /business formu admin hesabını tanıyıp buraya getirir
+  if (!authed) return <Navigate to="/business" state={{ mode: 'login' }} replace />;
 
   const handleLogout = async () => {
     await logout();
-    navigate('/admin', { replace: true });
+    navigate('/business', { state: { mode: 'login' }, replace: true });
   };
 
   return (

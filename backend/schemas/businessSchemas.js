@@ -35,7 +35,8 @@ const registerSchema = z
 
     // Adım 3 — Kurtarma ayarları
     dailyBoxCount: z.enum(['1-2', '3-5', '6-10', '10+']).default('1-2'),
-    boxContents: z.array(z.enum(['unlu', 'sicak', 'meze', 'manav', 'karisik', 'vegan'])).max(6).default([]),
+    boxContents: z.array(z.enum(['unlu', 'sicak', 'meze', 'manav', 'karisik', 'vegan', 'tatli', 'sandvic', 'sarkuteri', 'et', 'glutensiz', 'fastfood']))
+      .max(2, 'En fazla 2 kutu içeriği seçilebilir.').default([]),
     pickupStart: z.string().regex(TIME_RE, 'Saat SS:DD biçiminde olmalı.').optional(),
     pickupEnd: z.string().regex(TIME_RE, 'Saat SS:DD biçiminde olmalı.').optional(),
 
@@ -76,7 +77,9 @@ const profileSchema = z
     pickupEnd: z.string().regex(HHMM, 'Saat SS:DD formatında olmalı.').optional(),
     whatsappPhone: z.string().trim().max(20).optional(),
     contactPhone: z.string().trim().max(20).optional(),
-    boxContents: z.array(z.enum(['unlu', 'sicak', 'meze', 'manav', 'karisik', 'vegan'])).optional(),
+    boxContents: z.array(z.enum(['unlu', 'sicak', 'meze', 'manav', 'karisik', 'vegan', 'tatli', 'sandvic', 'sarkuteri', 'et', 'glutensiz', 'fastfood']))
+      .max(2, 'En fazla 2 kutu içeriği seçilebilir.').optional(),
+    description: z.string().trim().max(500, 'Açıklama en fazla 500 karakter olabilir.').optional(),
   })
   .refine((d) => !(d.pickupStart && d.pickupEnd) || d.pickupStart < d.pickupEnd, {
     message: 'Teslim bitişi başlangıçtan sonra olmalı.',

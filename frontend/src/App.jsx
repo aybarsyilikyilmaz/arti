@@ -1,20 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
-import AdminLogin from './pages/admin/AdminLogin';
 import AdminLayout from './pages/admin/AdminLayout';
 import BusinessApprovals from './pages/admin/BusinessApprovals';
 import OutreachQueue from './pages/admin/OutreachQueue';
-import BusinessLogin from './pages/business/BusinessLogin';
 import BusinessLayout from './pages/business/BusinessLayout';
 import Overview from './pages/business/Overview';
 import BoxManager from './pages/business/BoxManager';
 import BusinessSettings from './pages/business/BusinessSettings';
-import AppLayout from './pages/app/AppLayout';
-import UserAuth from './pages/app/UserAuth';
-import Discover from './pages/app/Discover';
-import MyOrders from './pages/app/MyOrders';
-import FavoritesPage from './pages/app/FavoritesPage';
-import NotificationsPage from './pages/app/NotificationsPage';
+import StorefrontEditor from './pages/business/StorefrontEditor';
 import Hero from './components/Hero';
 import InfoSection from './components/InfoSection';
 import BusinessAuth from './components/BusinessAuth';
@@ -83,7 +76,6 @@ function App() {
   const isBusinessPage = location.pathname.startsWith('/business');
   const isAdminPage = location.pathname.startsWith('/admin');
   const isPanelPage = location.pathname.startsWith('/panel');
-  const isAppPage = location.pathname.startsWith('/app');
   
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDarkHeader, setIsDarkHeader] = useState(true);
@@ -117,27 +109,23 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Admin/işletme panelleri ve kullanıcı uygulaması tanıtım sitesi kabuğundan bağımsızdır
-  if (isAdminPage || isPanelPage || isAppPage) {
+  // Admin ve işletme panelleri tanıtım sitesi kabuğundan (header/footer) bağımsızdır.
+  // İşletme girişi/kaydı /business sihirbazından yapılır; /panel yalnızca panelin kendisidir.
+  if (isAdminPage || isPanelPage) {
     return (
       <Routes>
-        <Route path="/app" element={<AppLayout />}>
-          <Route index element={<Discover />} />
-          <Route path="giris" element={<UserAuth />} />
-          <Route path="siparisler" element={<MyOrders />} />
-          <Route path="favoriler" element={<FavoritesPage />} />
-          <Route path="bildirimler" element={<NotificationsPage />} />
-        </Route>
-        <Route path="/admin" element={<AdminLogin />} />
+        {/* Admin girişi ayrı sayfa değildir — tek kapı /business giriş formudur */}
+        <Route path="/admin" element={<Navigate to="/business" state={{ mode: 'login' }} replace />} />
         <Route path="/admin/panel" element={<AdminLayout />}>
           <Route index element={<Navigate to="isletmeler" replace />} />
           <Route path="isletmeler" element={<BusinessApprovals />} />
           <Route path="whatsapp" element={<OutreachQueue />} />
         </Route>
-        <Route path="/panel" element={<BusinessLogin />} />
         <Route path="/panel" element={<BusinessLayout />}>
+          <Route index element={<Navigate to="genel-bakis" replace />} />
           <Route path="genel-bakis" element={<Overview />} />
           <Route path="kutu" element={<BoxManager />} />
+          <Route path="vitrin" element={<StorefrontEditor />} />
           <Route path="ayarlar" element={<BusinessSettings />} />
         </Route>
       </Routes>

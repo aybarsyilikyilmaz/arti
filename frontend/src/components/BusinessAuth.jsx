@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { setSession } from '../services/api';
 import { turkeyZones } from '../data/turkey_zones';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -44,6 +45,7 @@ import {
   Store, FileText, Package, Lock, Check, ChevronLeft, ChevronRight,
   UtensilsCrossed, Croissant, ShoppingCart, Coffee, Carrot, Beef, Hotel,
   Building2, Wheat, Soup, Salad, Leaf, Clock, ShieldCheck,
+  Cake, Sandwich, Milk, Pizza, WheatOff,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------
@@ -82,11 +84,17 @@ const BOX_COUNTS = ['1-2', '3-5', '6-10', '10+'];
 
 const BOX_CONTENTS = [
   { value: 'unlu', label: 'Unlu Mamuller', icon: Wheat },
+  { value: 'tatli', label: 'Tatlı & Pasta', icon: Cake },
+  { value: 'sandvic', label: 'Sandviç & Kahvaltılık', icon: Sandwich },
   { value: 'sicak', label: 'Sıcak Yemek', icon: Soup },
   { value: 'meze', label: 'Meze / Salata', icon: Salad },
   { value: 'manav', label: 'Manav / Sebze', icon: Carrot },
+  { value: 'sarkuteri', label: 'Şarküteri & Süt', icon: Milk },
+  { value: 'et', label: 'Et & Tavuk', icon: Beef },
+  { value: 'fastfood', label: 'Fast Food', icon: Pizza },
+  { value: 'glutensiz', label: 'Glutensiz', icon: WheatOff },
+  { value: 'vegan', label: 'Vegan', icon: Leaf },
   { value: 'karisik', label: 'Karışık Kutu', icon: Package },
-  { value: 'vegan', label: 'Vegan / Vejetaryen', icon: Leaf },
 ];
 
 const inputCls = 'appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand sm:text-sm transition-colors bg-white';
@@ -113,6 +121,7 @@ export default function BusinessAuth() {
   const [stepError, setStepError] = useState(null);
 
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (location.state?.mode === 'register') {
@@ -161,9 +170,15 @@ export default function BusinessAuth() {
   const handleChange = (e) => set(e.target.name, e.target.value);
 
   const toggleBoxContent = (value) => {
+    const on = formData.boxContents.includes(value);
+    // Uygulamada karışık görünmemesi için en fazla 2 içerik seçilebilir (backend de doğrular)
+    if (!on && formData.boxContents.length >= 2) {
+      setStepError('En fazla 2 kutu içeriği seçebilirsiniz.');
+      return;
+    }
     setFormData((prev) => ({
       ...prev,
-      boxContents: prev.boxContents.includes(value)
+      boxContents: on
         ? prev.boxContents.filter((v) => v !== value)
         : [...prev.boxContents, value],
     }));
@@ -224,8 +239,13 @@ export default function BusinessAuth() {
       });
       const data = await response.json();
       if (data.status === 'success') {
-        setMessage({ type: 'success', text: isLogin ? 'Sisteme başarıyla giriş yapıldı!' : 'İşletme kaydınız oluşturuldu! Hoş geldiniz 🎉' });
-        if (data.token) localStorage.setItem('token', data.token);
+        // Girişte access token belleğe alınır ve doğrudan yönetim paneline geçilir
+        if (isLogin && data.accessToken) {
+          setSession('business', data.accessToken);
+          navigate('/panel/genel-bakis', { replace: true });
+          return;
+        }
+        setMessage({ type: 'success', text: 'İşletme kaydınız oluşturuldu! 🎉 Ekibimiz başvurunuzu onayladıktan sonra bu ekrandan giriş yapıp panelinize ulaşabilirsiniz.' });
       } else {
         setMessage({ type: 'error', text: data.message || 'Bir hata oluştu. Lütfen tekrar deneyin.' });
       }
@@ -236,9 +256,41 @@ export default function BusinessAuth() {
     }
   };
 
-  const handleLoginSubmit = (e) => {
+  // Tek kapıdan iki rol: önce işletme olarak denenir, olmazsa admin.
+  // Başarılı role göre ilgili panele yönlendirilir.
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    submit({ email: formData.email, password: formData.password }, '/api/v1/business/login');
+    setLoading(true);
+    setMessage(null);
+    const base = import.meta.env.VITE_API_URL || 'http://localhost:5002';
+    const opts = (body) => ({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(body),
+    });
+    const creds = { email: formData.email, password: formData.password };
+    try {
+      let res = await fetch(`${base}/api/v1/business/login`, opts(creds));
+      let data = await res.json();
+      if (data.status === 'success' && data.accessToken) {
+        setSession('business', data.accessToken);
+        navigate('/panel/genel-bakis', { replace: true });
+        return;
+      }
+      res = await fetch(`${base}/api/v1/admin/login`, opts(creds));
+      data = await res.json();
+      if (data.status === 'success' && data.accessToken) {
+        setSession('admin', data.accessToken);
+        navigate('/admin/panel', { replace: true });
+        return;
+      }
+      setMessage({ type: 'error', text: data.message || 'Hatalı e-posta veya şifre.' });
+    } catch {
+      setMessage({ type: 'error', text: 'Sunucuya bağlanılamadı. Lütfen bağlantınızı kontrol edin.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRegisterSubmit = () => {

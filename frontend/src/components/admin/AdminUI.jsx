@@ -41,6 +41,21 @@ export function GlassCard({ className = '', interactive = false, children, ...re
   );
 }
 
+/* Beyaz tema kartı — işletme paneli (aydınlık) sayfaları için */
+export function LightCard({ className = '', interactive = false, children, ...rest }) {
+  return (
+    <div
+      className={`rounded-2xl border border-gray-200 bg-white shadow-sm
+        transition-all duration-300 ease-in-out
+        ${interactive ? 'hover:-translate-y-1 hover:border-gray-300 hover:shadow-lg hover:shadow-gray-200/70' : ''}
+        ${className}`}
+      {...rest}
+    >
+      {children}
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* Buton seti — tıklamada scale-95, hover'da yumuşak parlama           */
 /* ------------------------------------------------------------------ */
@@ -110,10 +125,12 @@ const STATUS_STYLES = {
   REFUNDED:           { label: 'İade Edildi',        cls: 'bg-violet-500/10 text-violet-400 ring-violet-500/20',  dot: 'bg-violet-400' },
 };
 
-export function StatusBadge({ status, pulse = false }) {
+export function StatusBadge({ status, pulse = false, light = false }) {
   const s = STATUS_STYLES[status] || { label: status, cls: 'bg-slate-500/10 text-slate-400 ring-slate-500/20', dot: 'bg-slate-500' };
+  // Beyaz zeminde metin bir ton koyulaşır (…-400 → …-600), zemin pastel olur
+  const cls = light ? s.cls.replace(/-400\b/g, '-600').replace(/\/10\b/g, '/[0.08]') : s.cls;
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide ring-1 ring-inset ${s.cls}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide ring-1 ring-inset ${cls}`}>
       <span className="relative flex h-1.5 w-1.5">
         {pulse && <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-60 ${s.dot}`} />}
         <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${s.dot}`} />
@@ -130,17 +147,17 @@ export function Spinner({ className = 'h-5 w-5' }) {
   return <Loader2 className={`animate-spin text-slate-500 ${className}`} />;
 }
 
-export function EmptyState({ icon: Icon = Inbox, title, hint }) {
+export function EmptyState({ icon: Icon = Inbox, title, hint, light = false }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
       <div className="relative">
-        <div className="absolute inset-0 rounded-2xl bg-indigo-500/20 blur-xl" />
-        <div className="relative rounded-2xl border border-white/10 bg-white/[0.05] p-4 backdrop-blur-md">
-          <Icon className="h-8 w-8 text-slate-500" />
+        {!light && <div className="absolute inset-0 rounded-2xl bg-indigo-500/20 blur-xl" />}
+        <div className={`relative rounded-2xl border p-4 ${light ? 'border-gray-200 bg-gray-50' : 'border-white/10 bg-white/[0.05] backdrop-blur-md'}`}>
+          <Icon className={`h-8 w-8 ${light ? 'text-gray-300' : 'text-slate-500'}`} />
         </div>
       </div>
-      <p className="text-sm font-semibold text-slate-300">{title}</p>
-      {hint && <p className="max-w-sm text-xs leading-relaxed text-slate-500">{hint}</p>}
+      <p className={`text-sm font-semibold ${light ? 'text-gray-700' : 'text-slate-300'}`}>{title}</p>
+      {hint && <p className={`max-w-sm text-xs leading-relaxed ${light ? 'text-gray-400' : 'text-slate-500'}`}>{hint}</p>}
     </div>
   );
 }

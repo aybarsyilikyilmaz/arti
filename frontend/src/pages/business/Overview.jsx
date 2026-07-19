@@ -1,5 +1,6 @@
 // Genel Bakış: bugünün kutu durumu + 7 günlük ciro grafiği + özet kartları.
 // Veri kaynağı: GET /business/reports/summary (PLAN.md Faz 4 rapor ucu).
+// Tema: işletme paneli tamamen aydınlıktır.
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -8,7 +9,7 @@ import {
 import { Wallet, ShoppingBag, Leaf, Package, TrendingUp } from 'lucide-react';
 import * as businessService from '../../services/businessService';
 import { apiErrorMessage } from '../../services/api';
-import { GlassCard, Spinner, useToasts, ToastStack } from '../../components/admin/AdminUI';
+import { LightCard, Spinner, useToasts, ToastStack } from '../../components/admin/AdminUI';
 
 const tl = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 });
 
@@ -33,10 +34,10 @@ function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
   return (
-    <div className="rounded-xl border border-white/10 bg-[#0a101f]/95 px-3.5 py-2.5 backdrop-blur-xl shadow-[0_12px_40px_rgba(2,6,23,0.7)]">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{label}</p>
-      <p className="mt-1 text-sm font-bold text-emerald-400">{tl.format(p.revenue)}</p>
-      <p className="text-xs text-slate-400">{p.orders} sipariş</p>
+    <div className="rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 shadow-xl shadow-gray-200/70">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">{label}</p>
+      <p className="mt-1 text-sm font-bold text-emerald-600">{tl.format(p.revenue)}</p>
+      <p className="text-xs text-gray-500">{p.orders} sipariş</p>
     </div>
   );
 }
@@ -54,7 +55,7 @@ export default function Overview() {
   }, [push]);
 
   if (loading) {
-    return <GlassCard><div className="flex justify-center py-24"><Spinner className="h-7 w-7" /></div></GlassCard>;
+    return <LightCard><div className="flex justify-center py-24"><Spinner className="h-7 w-7" /></div></LightCard>;
   }
   if (!data) return null;
 
@@ -79,8 +80,8 @@ export default function Overview() {
       <ToastStack toasts={toasts} />
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-white">Genel Bakış</h1>
-        <p className="mt-1 text-sm text-slate-500">Son 7 günün performansı ve bugünün durumu</p>
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Genel Bakış</h1>
+        <p className="mt-1 text-sm text-gray-500">Son 7 günün performansı ve bugünün durumu</p>
       </div>
 
       {/* İstatistik kartları */}
@@ -91,30 +92,30 @@ export default function Overview() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4, ease: [0.22, 1, 0.36, 1] } }}
           >
-            <GlassCard interactive className="p-5">
-              <div className={`mb-3 inline-flex rounded-xl border p-2.5 ${
-                s.accent === 'emerald' ? 'border-emerald-400/20 bg-emerald-500/10 text-emerald-400'
-                : s.accent === 'indigo' ? 'border-indigo-400/20 bg-indigo-500/10 text-indigo-400'
-                : 'border-amber-400/20 bg-amber-500/10 text-amber-400'
+            <LightCard interactive className="p-5">
+              <div className={`mb-3 inline-flex rounded-xl p-2.5 ${
+                s.accent === 'emerald' ? 'bg-emerald-50 text-emerald-600'
+                : s.accent === 'indigo' ? 'bg-indigo-50 text-indigo-600'
+                : 'bg-amber-50 text-amber-600'
               }`}>
                 <s.icon className="h-5 w-5" />
               </div>
-              <p className="text-2xl font-bold tracking-tight text-white">{s.value}</p>
-              <p className="mt-0.5 text-xs font-medium text-slate-500">{s.label}</p>
-              {s.hint && <p className="mt-1 text-[11px] text-slate-600">{s.hint}</p>}
-            </GlassCard>
+              <p className="text-2xl font-bold tracking-tight text-gray-900">{s.value}</p>
+              <p className="mt-0.5 text-xs font-medium text-gray-400">{s.label}</p>
+              {s.hint && <p className="mt-1 text-[11px] text-gray-400">{s.hint}</p>}
+            </LightCard>
           </motion.div>
         ))}
       </div>
 
       {/* Ciro grafiği */}
-      <GlassCard className="p-6">
+      <LightCard className="p-6">
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <h2 className="flex items-center gap-2 text-sm font-bold text-white">
-              <TrendingUp className="h-4 w-4 text-emerald-400" /> Günlük Ciro
+            <h2 className="flex items-center gap-2 text-sm font-bold text-gray-900">
+              <TrendingUp className="h-4 w-4 text-emerald-500" /> Günlük Ciro
             </h2>
-            <p className="mt-0.5 text-xs text-slate-500">Yalnızca ödemesi tamamlanan siparişler</p>
+            <p className="mt-0.5 text-xs text-gray-400">Yalnızca ödemesi tamamlanan siparişler</p>
           </div>
         </div>
         <div className="h-72">
@@ -122,23 +123,23 @@ export default function Overview() {
             <AreaChart data={chart} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
               <defs>
                 <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.35} />
+                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
                   <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
+              <CartesianGrid stroke="rgba(15,23,42,0.06)" vertical={false} />
               <XAxis
                 dataKey="label"
                 stroke="transparent"
-                tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }}
+                tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 500 }}
                 tickMargin={10}
               />
               <YAxis
                 stroke="transparent"
-                tick={{ fill: '#64748b', fontSize: 11 }}
+                tick={{ fill: '#94a3b8', fontSize: 11 }}
                 tickFormatter={(v) => (v >= 1000 ? `${v / 1000}k` : v)}
               />
-              <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'rgba(16,185,129,0.25)', strokeWidth: 1.5 }} />
+              <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'rgba(16,185,129,0.3)', strokeWidth: 1.5 }} />
               <Area
                 type="monotone"
                 dataKey="revenue"
@@ -146,14 +147,14 @@ export default function Overview() {
                 strokeWidth={2.5}
                 fill="url(#revGrad)"
                 dot={{ r: 3, fill: '#10b981', strokeWidth: 0 }}
-                activeDot={{ r: 5, fill: '#34d399', stroke: 'rgba(16,185,129,0.3)', strokeWidth: 6 }}
+                activeDot={{ r: 5, fill: '#34d399', stroke: 'rgba(16,185,129,0.25)', strokeWidth: 6 }}
                 animationDuration={900}
                 animationEasing="ease-out"
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
-      </GlassCard>
+      </LightCard>
     </div>
   );
 }

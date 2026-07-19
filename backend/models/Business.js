@@ -91,6 +91,8 @@ const businessSchema = new mongoose.Schema({
   // Görseller — depolama adaptöründen dönen publicUrl (lokal disk veya S3/CDN)
   logoUrl: { type: String, trim: true, maxlength: 500 },
   coverUrl: { type: String, trim: true, maxlength: 500 },
+  // Vitrin: müşteri uygulamasında görünen tanıtım metni
+  description: { type: String, trim: true, maxlength: 500 },
   // Operasyonel / sürpriz kutu ayarları
   dailyBoxCount: {
     type: String,
@@ -99,7 +101,7 @@ const businessSchema = new mongoose.Schema({
   },
   boxContents: [{
     type: String,
-    enum: ['unlu', 'sicak', 'meze', 'manav', 'karisik', 'vegan']
+    enum: ['unlu', 'sicak', 'meze', 'manav', 'karisik', 'vegan', 'tatli', 'sandvic', 'sarkuteri', 'et', 'glutensiz', 'fastfood']
   }],
   pickupStart: { type: String, trim: true },
   pickupEnd: { type: String, trim: true },

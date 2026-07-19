@@ -125,7 +125,7 @@ exports.updateProfile = async (req, res, next) => {
     const Business = require('../models/Business');
     const ALLOWED = [
       'defaultPackageCount', 'defaultPrice', 'defaultOriginalPrice',
-      'pickupStart', 'pickupEnd', 'whatsappPhone', 'contactPhone', 'boxContents',
+      'pickupStart', 'pickupEnd', 'whatsappPhone', 'contactPhone', 'boxContents', 'description',
     ];
     const update = {};
     for (const key of ALLOWED) {
