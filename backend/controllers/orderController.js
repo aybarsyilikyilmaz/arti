@@ -35,7 +35,7 @@ exports.myOrders = async (req, res, next) => {
     const orders = await Order.find({ user: req.auth.id })
       .sort('-createdAt')
       .limit(50)
-      .select('business box amount status qrToken reservedAt paidAt usedAt')
+      .select('business box amount status qrToken paymentRef reservedAt paidAt usedAt')
       .populate('business', 'name address')
       .populate('box', 'pickupStart pickupEnd date');
     res.status(200).json({ status: 'success', results: orders.length, data: { orders } });

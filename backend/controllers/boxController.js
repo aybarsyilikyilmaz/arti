@@ -68,7 +68,7 @@ exports.listNearby = async (req, res, next) => {
 
     const boxes = await SurpriseBox.find(filter)
       .limit(50)
-      .select('businessName price originalPrice contents pickupStart pickupEnd remaining location');
+      .select('business businessName price originalPrice contents pickupStart pickupEnd remaining location');
 
     res.status(200).json({ status: 'success', results: boxes.length, data: { boxes } });
   } catch (err) {

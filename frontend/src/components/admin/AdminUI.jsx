@@ -102,6 +102,12 @@ const STATUS_STYLES = {
   PENDING_REVIEW:     { label: 'İnceleme Bekliyor',  cls: 'bg-amber-500/10 text-amber-400 ring-amber-500/20',     dot: 'bg-amber-400' },
   FALLBACK_PUBLISHED: { label: 'Otomatik Yayın',     cls: 'bg-violet-500/10 text-violet-400 ring-violet-500/20',  dot: 'bg-violet-400' },
   DISMISSED:          { label: 'Yoksayıldı',         cls: 'bg-slate-500/10 text-slate-400 ring-slate-500/20',     dot: 'bg-slate-500' },
+  // Sipariş durumları (kullanıcı uygulaması)
+  RESERVED:           { label: 'Ödeme Bekliyor',     cls: 'bg-amber-500/10 text-amber-400 ring-amber-500/20',     dot: 'bg-amber-400' },
+  PAID:               { label: 'Teslime Hazır',      cls: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20', dot: 'bg-emerald-400' },
+  PICKED_UP:          { label: 'Teslim Edildi',      cls: 'bg-sky-500/10 text-sky-400 ring-sky-500/20',           dot: 'bg-sky-400' },
+  EXPIRED:            { label: 'Süresi Doldu',       cls: 'bg-slate-500/10 text-slate-400 ring-slate-500/20',     dot: 'bg-slate-500' },
+  REFUNDED:           { label: 'İade Edildi',        cls: 'bg-violet-500/10 text-violet-400 ring-violet-500/20',  dot: 'bg-violet-400' },
 };
 
 export function StatusBadge({ status, pulse = false }) {

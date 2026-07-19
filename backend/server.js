@@ -91,6 +91,21 @@ app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/admin', adminRoutes);
 // Ödeme sağlayıcı webhook'u (HMAC imzalı — bkz. orderController.paymentWebhook)
 app.post('/api/v1/webhooks/payment', orderController.paymentWebhook);
+// Mock ödeme simülasyonu — yalnızca dev (PAYMENT_PROVIDER=mock). Gerçek sağlayıcıda
+// bu rota hiç mount edilmez; ödeme sonucu imzalı webhook'tan gelir.
+if (env.paymentProvider === 'mock') {
+  const orderService = require('./services/orderService');
+  app.post('/api/v1/payments/mock/complete', async (req, res, next) => {
+    try {
+      const { paymentRef, success = true } = req.body || {};
+      if (!paymentRef) return res.status(400).json({ status: 'fail', message: 'paymentRef zorunlu.' });
+      const result = await orderService.handlePaymentResult(paymentRef, Boolean(success));
+      res.status(200).json({ status: 'success', outcome: result.outcome });
+    } catch (err) {
+      next(err);
+    }
+  });
+}
 // Desk360 WhatsApp cevap webhook'u (URL token korumalı — PLAN.md §3.4)
 app.post('/api/v1/webhooks/desk360/:token', validateBody(webhookSchema), desk360Controller.webhook);
 
