@@ -1,21 +1,32 @@
-// Uygulama içi bildirim (PLAN.md Faz 4) — şimdilik tek tür: favori işletme
-// bugünün kutusunu yayınladığında. Push (FCM) eklendiğinde aynı kayıtlar
-// gönderim kuyruğu olarak kullanılır.
+// Uygulama içi bildirim — Müşteri ve İşletmeleri kapsayacak şekilde genişletildi.
 const mongoose = require('mongoose');
 
 const notificationSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  type: { type: String, enum: ['BOX_PUBLISHED'], required: true },
+  // targetType bildirimin kime gönderildiğini belirler (User veya Business)
+  targetType: { type: String, enum: ['USER', 'BUSINESS'], required: true },
+  
+  // Polymorphic referanslar:
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business' },
+  
+  // İlişkili opsiyonel kaynaklar (sipariş, kutu vb.)
+  order: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
   box: { type: mongoose.Schema.Types.ObjectId, ref: 'SurpriseBox' },
+  
+  type: { 
+    type: String, 
+    enum: ['BOX_PUBLISHED', 'NEW_ORDER', 'ADMIN_MESSAGE', 'SYSTEM_ALERT'], 
+    required: true 
+  },
+  
   title: { type: String, required: true, maxlength: 120 },
-  body: { type: String, required: true, maxlength: 300 },
+  body: { type: String, required: true, maxlength: 500 },
+  
   readAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
 });
 
-// Kullanıcının bildirim akışı + okunmamış sayacı bu indeksten döner
-notificationSchema.index({ user: 1, createdAt: -1 });
-notificationSchema.index({ user: 1, readAt: 1 });
+// İlgili hedefin (User veya Business) okunmamış bildirimlerini hızlıca çekmek için indeks
+notificationSchema.index({ targetType: 1, user: 1, business: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Notification', notificationSchema);

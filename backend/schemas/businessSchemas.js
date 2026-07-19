@@ -15,22 +15,20 @@ const registerSchema = z
       message: 'Geçersiz işletme türü.',
     }),
     branchType: z.enum(['tek', 'zincir']).default('tek'),
+    branchName: optionalTrimmed(120),
 
     // Adım 2 — Yasal & iletişim
     legalName: optionalTrimmed(200),
     taxOffice: optionalTrimmed(100),
     taxNumber: z.string().trim().regex(/^\d{10,11}$/, 'Vergi numarası 10 (VKN) veya 11 (TCKN) haneli olmalı.').optional(),
     mersisNumber: optionalTrimmed(30),
-    city: optionalTrimmed(60),
-    district: optionalTrimmed(60),
-    neighborhood: optionalTrimmed(80),
+    mapsUrl: optionalTrimmed(500),
     address: z.string({ message: 'Adres zorunludur.' }).trim()
       .min(5, 'Adres en az 5 karakter olmalı.')
       .max(500, 'Adres en fazla 500 karakter olabilir.'),
     phone: z.string({ message: 'İşletme telefonu zorunludur.' }).trim()
       .regex(PHONE_RE, 'Geçerli bir telefon numarası girin.'),
     contactName: optionalTrimmed(120),
-    contactRole: z.enum(['sahibi', 'mudur', 'operasyon', 'diger']).default('sahibi'),
     contactPhone: z.string().trim().regex(PHONE_RE, 'Geçerli bir yetkili telefonu girin.').optional(),
 
     // Adım 3 — Kurtarma ayarları
@@ -64,7 +62,7 @@ const loginSchema = z.object({
   password: z.string({ message: 'Şifre zorunludur.' }).min(1, 'Şifre zorunludur.').max(128),
 });
 
-module.exports = { registerSchema, loginSchema };
+// module.exports = { registerSchema, loginSchema, profileSchema };
 
 // Panel ayarları — HH:MM saat formatı, mantık kuralları zod'da (PLAN.md §6.8)
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -88,4 +86,11 @@ const profileSchema = z
     message: 'İndirimli fiyat, normal fiyattan düşük olmalı.',
   });
 
-module.exports.profileSchema = profileSchema;
+const createBranchSchema = z.object({
+  name: z.string({ message: 'Şube adı zorunludur.' }).trim().min(2).max(120),
+  mapsUrl: z.string().trim().max(500).optional(),
+  address: z.string({ message: 'Adres zorunludur.' }).trim().min(5).max(500),
+  phone: z.string({ message: 'Telefon numarası zorunludur.' }).trim().regex(PHONE_RE, 'Geçerli bir telefon numarası girin.'),
+});
+
+module.exports = { registerSchema, loginSchema, profileSchema, createBranchSchema };

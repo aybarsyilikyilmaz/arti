@@ -51,6 +51,7 @@ async function reserveBox(userId, boxId) {
       business: box.business,
       box: box._id,
       amount: box.price,
+      baseAmount: box.basePrice,
       status: 'RESERVED',
       idempotencyKey: crypto.randomUUID(),
     });

@@ -22,6 +22,7 @@ const userRoutes = require('./routes/userRoutes');
 const boxRoutes = require('./routes/boxRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const ticketRoutes = require('./routes/ticketRoutes');
 const orderController = require('./controllers/orderController');
 
 const app = express();
@@ -89,6 +90,7 @@ app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/boxes', boxRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/tickets', ticketRoutes);
 // Ödeme sağlayıcı webhook'u (HMAC imzalı — bkz. orderController.paymentWebhook)
 app.post('/api/v1/webhooks/payment', orderController.paymentWebhook);
 // Mock ödeme simülasyonu — yalnızca dev (PAYMENT_PROVIDER=mock). Gerçek sağlayıcıda

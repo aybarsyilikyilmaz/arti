@@ -62,3 +62,9 @@ jobs:
 
       - name: Faz 4 duman testi (favori/bildirim/fraud/rapor)
         run: node scripts/e2e-faz4.js
+
+      - name: Admin işletme-detay duman testi (18 kontrol)
+        run: node scripts/e2e-admin-detail.js
+
+      - name: Admin platform duman testi (dashboard/sipariş/kullanıcı/finans/yorum)
+        run: node scripts/e2e-admin-platform.js

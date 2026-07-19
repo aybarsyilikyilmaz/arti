@@ -64,11 +64,11 @@ const BTN_BASE = `inline-flex items-center justify-center gap-1.5 rounded-xl tex
   disabled:pointer-events-none disabled:opacity-40 select-none`;
 
 export function PrimaryButton({ className = '', ...rest }) {
-  // Parlak indigo — ana aksiyon
+  // Zümrüt — ana aksiyon (aydınlık tema; admin ve işletme panelleri aynı dili konuşur)
   return (
     <button
-      className={`${BTN_BASE} bg-indigo-500 text-white shadow-[0_4px_20px_rgba(99,102,241,0.35)]
-        hover:-translate-y-0.5 hover:bg-indigo-400 hover:shadow-[0_8px_28px_rgba(99,102,241,0.5)] ${className}`}
+      className={`${BTN_BASE} bg-emerald-600 text-white shadow-md shadow-emerald-600/25
+        hover:-translate-y-0.5 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-600/30 ${className}`}
       {...rest}
     />
   );
@@ -88,8 +88,8 @@ export function SuccessButton({ className = '', ...rest }) {
 export function GhostButton({ className = '', ...rest }) {
   return (
     <button
-      className={`${BTN_BASE} border border-white/10 bg-white/[0.04] text-slate-300
-        hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.09] hover:text-white ${className}`}
+      className={`${BTN_BASE} border border-gray-200 bg-white text-gray-500 shadow-sm
+        hover:-translate-y-0.5 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700 hover:shadow-md ${className}`}
       {...rest}
     />
   );
@@ -98,8 +98,8 @@ export function GhostButton({ className = '', ...rest }) {
 export function DangerButton({ className = '', ...rest }) {
   return (
     <button
-      className={`${BTN_BASE} border border-rose-500/25 bg-rose-500/10 text-rose-300
-        hover:-translate-y-0.5 hover:border-rose-400/40 hover:bg-rose-500/20 hover:shadow-[0_8px_24px_rgba(244,63,94,0.2)] ${className}`}
+      className={`${BTN_BASE} border border-rose-200 bg-rose-50 text-rose-600
+        hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 hover:shadow-md hover:shadow-rose-100 ${className}`}
       {...rest}
     />
   );
@@ -184,16 +184,14 @@ export function ToastStack({ toasts }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, x: 32, transition: { duration: 0.25 } }}
             transition={{ type: 'spring', damping: 24, stiffness: 320 }}
-            className={`flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium backdrop-blur-2xl
-              shadow-[0_12px_40px_rgba(2,6,23,0.6)] ${
-              t.type === 'error'
-                ? 'border-rose-500/25 bg-rose-950/70 text-rose-200'
-                : 'border-emerald-500/25 bg-emerald-950/70 text-emerald-200'
+            className={`flex items-center gap-2.5 rounded-xl border bg-white px-4 py-3 text-sm font-medium
+              shadow-xl shadow-gray-300/40 ${
+              t.type === 'error' ? 'border-rose-200 text-rose-700' : 'border-emerald-200 text-emerald-700'
             }`}
           >
             {t.type === 'error'
-              ? <XCircle className="h-4 w-4 shrink-0 text-rose-400" />
-              : <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />}
+              ? <XCircle className="h-4 w-4 shrink-0 text-rose-500" />
+              : <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />}
             {t.message}
           </motion.div>
         ))}

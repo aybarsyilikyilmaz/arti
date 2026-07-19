@@ -9,11 +9,27 @@ const storage = require('../services/storage');
 
 const EXT_BY_TYPE = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 
+// Ortak imzalama — dosya anahtarı her zaman hedef işletmenin klasörüne yazılır
+const presignFor = (businessId, { kind, contentType }) => {
+  const key = `business/${businessId}/${kind}-${crypto.randomBytes(8).toString('hex')}.${EXT_BY_TYPE[contentType]}`;
+  return storage.presignUpload({ key, contentType });
+};
+
 exports.presign = async (req, res, next) => {
   try {
-    const { kind, contentType } = req.body;
-    const key = `business/${req.auth.id}/${kind}-${crypto.randomBytes(8).toString('hex')}.${EXT_BY_TYPE[contentType]}`;
-    const grant = await storage.presignUpload({ key, contentType });
+    const grant = await presignFor(req.auth.id, req.body);
+    res.status(200).json({ status: 'success', data: grant });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Admin, İşletme Detay → Kutu & Vitrin'den işletme adına görsel yükler
+exports.presignForBusiness = async (req, res, next) => {
+  try {
+    const business = await Business.findById(req.params.id).select('_id');
+    if (!business) return res.status(404).json({ status: 'fail', message: 'İşletme bulunamadı.' });
+    const grant = await presignFor(business._id, req.body);
     res.status(200).json({ status: 'success', data: grant });
   } catch (err) {
     next(err);
@@ -44,21 +60,32 @@ exports.putLocal = async (req, res, next) => {
   }
 };
 
+// Ortak görsel yazma — keyfi dış URL profil görseli yapılamaz, yalnızca kendi depomuz
+const applyImages = async (businessId, { logoUrl, coverUrl }, res) => {
+  for (const url of [logoUrl, coverUrl].filter(Boolean)) {
+    if (!storage.ownsPublicUrl(url)) {
+      return res.status(400).json({ status: 'fail', message: 'Görsel URL\'i depolama alanımıza ait değil.' });
+    }
+  }
+  const update = {};
+  if (logoUrl) update.logoUrl = logoUrl;
+  if (coverUrl) update.coverUrl = coverUrl;
+  const business = await Business.findByIdAndUpdate(businessId, update, { new: true });
+  if (!business) return res.status(404).json({ status: 'fail', message: 'İşletme bulunamadı.' });
+  return res.status(200).json({ status: 'success', data: { business: business.toSafeJSON() } });
+};
+
 exports.setImages = async (req, res, next) => {
   try {
-    const { logoUrl, coverUrl } = req.body;
-    // Keyfi dış URL profil görseli yapılamaz — yalnızca kendi depomuz
-    for (const url of [logoUrl, coverUrl].filter(Boolean)) {
-      if (!storage.ownsPublicUrl(url)) {
-        return res.status(400).json({ status: 'fail', message: 'Görsel URL\'i depolama alanımıza ait değil.' });
-      }
-    }
-    const update = {};
-    if (logoUrl) update.logoUrl = logoUrl;
-    if (coverUrl) update.coverUrl = coverUrl;
-    const business = await Business.findByIdAndUpdate(req.auth.id, update, { new: true });
-    if (!business) return res.status(404).json({ status: 'fail', message: 'İşletme bulunamadı.' });
-    res.status(200).json({ status: 'success', data: { business: business.toSafeJSON() } });
+    await applyImages(req.auth.id, req.body, res);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.setImagesForBusiness = async (req, res, next) => {
+  try {
+    await applyImages(req.params.id, req.body, res);
   } catch (err) {
     next(err);
   }

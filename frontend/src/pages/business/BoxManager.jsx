@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, QrCode, CheckCircle2, XCircle, Sparkles, Loader2 } from 'lucide-react';
+import { Package, QrCode, CheckCircle2, XCircle, Sparkles, Loader2, Camera } from 'lucide-react';
 import * as businessService from '../../services/businessService';
 import { apiErrorMessage } from '../../services/api';
 import {
@@ -12,6 +12,7 @@ import {
 
 // Kategoriler tek kaynaktan gelir (backend enum'larıyla birebir)
 import { BOX_CONTENTS as CONTENTS, MAX_CONTENTS } from '../../data/boxContents';
+import QRScanner from '../../components/business/QRScanner';
 
 const inputCls = `w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900
   placeholder-gray-400 outline-none transition-all duration-300 ease-in-out
@@ -23,8 +24,9 @@ export default function BoxManager() {
   const [box, setBox] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [form, setForm] = useState({
-    price: '', originalPrice: '', initialStock: '', contents: [], pickupStart: '', pickupEnd: '',
+    basePrice: '', originalPrice: '', initialStock: '', contents: [], pickupStart: '', pickupEnd: '',
   });
 
   // QR doğrulama durumu
@@ -37,7 +39,7 @@ export default function BoxManager() {
       .then((b) => {
         setBox(b);
         setForm({
-          price: b?.price ?? me?.defaultPrice ?? '',
+          basePrice: b?.basePrice ?? me?.defaultPrice ?? '',
           originalPrice: b?.originalPrice ?? me?.defaultOriginalPrice ?? '',
           initialStock: b?.initialStock ?? me?.defaultPackageCount ?? '',
           contents: b?.contents?.length ? b.contents : (me?.boxContents || []),
@@ -71,7 +73,7 @@ export default function BoxManager() {
     setSaving(true);
     try {
       const saved = await businessService.upsertTodayBox({
-        price: Number(form.price),
+        basePrice: Number(form.basePrice),
         originalPrice: Number(form.originalPrice),
         initialStock: Number(form.initialStock),
         contents: form.contents,
@@ -114,12 +116,15 @@ export default function BoxManager() {
 
       <div className="grid gap-5 xl:grid-cols-5">
         {/* Kutu formu */}
-        <LightCard className="p-6 xl:col-span-3">
+        <LightCard className="p-6 xl:col-span-3 border-emerald-100 ring-2 ring-emerald-500/10">
           <div className="mb-5 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-sm font-bold text-gray-900">
-              <Package className="h-4 w-4 text-emerald-500" />
-              {box ? 'Bugünün Kutusu' : 'Bugünün Kutusunu Yayınla'}
-            </h2>
+            <div>
+              <h2 className="flex items-center gap-2 text-sm font-bold text-gray-900">
+                <Package className="h-4 w-4 text-emerald-500" />
+                Günlük Kutu Şablonu
+              </h2>
+              <p className="mt-1 text-xs text-gray-400">Buraya girdiğiniz değerler her gün WhatsApp botu tarafından otomatik yayınlanacak temel şablonunuzdur. Ayrıca bugünün kutusunu da anında günceller.</p>
+            </div>
             {box && (
               <div className="flex items-center gap-4 text-xs">
                 <span className="text-gray-400">Satılan <b className="text-gray-900">{sold}</b></span>
@@ -134,9 +139,9 @@ export default function BoxManager() {
             <form onSubmit={submit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                 <label className="block">
-                  <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-gray-400">İndirimli Fiyat (₺)</span>
-                  <input type="number" min="1" required value={form.price}
-                    onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                  <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-gray-400">İşletme Hakedişi (₺)</span>
+                  <input type="number" min="1" required value={form.basePrice}
+                    onChange={(e) => setForm((f) => ({ ...f, basePrice: e.target.value }))}
                     className={`admin-no-spinner ${inputCls}`} placeholder="200" />
                 </label>
                 <label className="block">
@@ -202,15 +207,19 @@ export default function BoxManager() {
               </div>
 
               {/* İndirim önizlemesi */}
-              {form.price > 0 && form.originalPrice > 0 && Number(form.price) < Number(form.originalPrice) && (
+              {form.basePrice > 0 && form.originalPrice > 0 && Number(form.basePrice) < Number(form.originalPrice) && (
                 <p className="flex items-center gap-1.5 text-xs text-gray-500">
                   <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
-                  Müşteri <b className="text-emerald-600">%{Math.round((1 - form.price / form.originalPrice) * 100)} indirimle</b> kurtaracak.
+                  Müşteri uygulamasında kutu <b className="text-emerald-600">%{(me?.commissionRate || 10)}</b> platform farkıyla satılacak.
                 </p>
               )}
 
-              <SuccessButton type="submit" disabled={saving || form.contents.length === 0} className="w-full py-3 text-sm">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : (box ? 'Kutuyu Güncelle' : 'Kutuyu Yayınla')}
+              <SuccessButton type="submit" disabled={saving} className="mt-2 w-full py-3.5 text-sm">
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  'Şablonu Kaydet & Kutuyu Yayınla'
+                )}
               </SuccessButton>
               {form.contents.length === 0 && (
                 <p className="text-center text-[11px] text-gray-400">En az bir içerik türü seç.</p>
@@ -228,21 +237,59 @@ export default function BoxManager() {
             Müşterinin uygulamadaki QR kodunu okut ya da kodu buraya yapıştır. Her kod tek kullanımlıktır.
           </p>
 
-          <form onSubmit={verify} className="space-y-3">
-            <input
-              value={qr}
-              onChange={(e) => setQr(e.target.value)}
-              placeholder="QR kodu buraya yapıştır…"
-              className={`${inputCls} font-mono text-xs focus:border-indigo-500 focus:ring-indigo-500/10`}
-            />
-            <button
-              type="submit"
-              disabled={verifying || !qr.trim()}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/25 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-indigo-500 active:scale-95 active:duration-100 disabled:pointer-events-none disabled:opacity-40"
-            >
-              {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Doğrula ve Teslim Et</>}
-            </button>
-          </form>
+          <div className="space-y-4">
+            {!showScanner ? (
+              <button
+                onClick={() => setShowScanner(true)}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-indigo-200 bg-indigo-50/50 py-8 text-sm font-medium text-indigo-600 transition-colors hover:border-indigo-300 hover:bg-indigo-50"
+              >
+                <Camera className="h-5 w-5" />
+                Kamerayı Aç ve QR Okut
+              </button>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <QRScanner 
+                  onResult={(code) => {
+                    setQr(code);
+                    setShowScanner(false);
+                    // Automatically trigger form submission if we had a programmatic way,
+                    // but they can just click "Doğrula ve Teslim Et".
+                  }}
+                  onError={(err) => {
+                    // Ignore scanner errors as they stream continuously if no QR is found
+                  }}
+                />
+                <button
+                  onClick={() => setShowScanner(false)}
+                  className="text-sm font-medium text-gray-500 hover:text-gray-700"
+                >
+                  Kamerayı Kapat
+                </button>
+              </div>
+            )}
+
+            <div className="relative flex items-center py-2">
+              <div className="flex-grow border-t border-gray-100"></div>
+              <span className="shrink-0 px-3 text-[11px] font-medium uppercase tracking-wider text-gray-400">VEYA KOD GİR</span>
+              <div className="flex-grow border-t border-gray-100"></div>
+            </div>
+
+            <form onSubmit={verify} className="space-y-3">
+              <input
+                value={qr}
+                onChange={(e) => setQr(e.target.value)}
+                placeholder="QR kodu buraya yapıştır…"
+                className={`${inputCls} font-mono text-xs focus:border-indigo-500 focus:ring-indigo-500/10`}
+              />
+              <button
+                type="submit"
+                disabled={verifying || !qr.trim()}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/25 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-indigo-500 active:scale-95 active:duration-100 disabled:pointer-events-none disabled:opacity-40"
+              >
+                {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Doğrula ve Teslim Et</>}
+              </button>
+            </form>
+          </div>
 
           <AnimatePresence mode="wait">
             {verifyResult && (

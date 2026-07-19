@@ -34,6 +34,10 @@ exports.login = async (req, res, next) => {
     if (!user || !(await user.correctPassword(password, user.password))) {
       return res.status(401).json({ status: 'fail', message: 'Hatalı e-posta veya şifre.' });
     }
+    // Moderasyon: banlı hesap oturum açamaz
+    if (user.bannedAt) {
+      return res.status(403).json({ status: 'fail', message: 'Hesabınız askıya alınmıştır. Destek ekibiyle iletişime geçin.' });
+    }
 
     const accessToken = await tokenService.issueSession(res, user, 'user');
     res.status(200).json({

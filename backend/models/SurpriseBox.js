@@ -18,9 +18,15 @@ const surpriseBoxSchema = new mongoose.Schema({
     required: true,
     match: /^\d{4}-\d{2}-\d{2}$/
   },
-  price: {
+  basePrice: {
     type: Number,
     required: true,
+    min: 1
+  },
+  // Müşteriye gösterilen fiyat = basePrice * (1 + commissionRate/100)
+  // Controller tarafından hesaplanır — direkt DB insert'te yoksa null kalabilir
+  price: {
+    type: Number,
     min: 1
   },
   originalPrice: {

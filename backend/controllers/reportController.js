@@ -100,3 +100,36 @@ exports.recentOrders = async (req, res, next) => {
     next(err);
   }
 };
+
+// Tüm siparişler — işletme paneli sayfalı liste (page, limit sorgu parametreleri)
+exports.allOrders = async (req, res, next) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.auth.id);
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
+    const skip = (page - 1) * limit;
+
+    const [orders, total] = await Promise.all([
+      Order.find({ business: businessId })
+        .sort('-createdAt')
+        .skip(skip)
+        .limit(limit)
+        .select('user amount status reservedAt paidAt usedAt createdAt')
+        .populate('user', 'name email'),
+      Order.countDocuments({ business: businessId }),
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        totalOrders: total,
+        orders,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};

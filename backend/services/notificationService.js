@@ -11,6 +11,7 @@ async function notifyBoxPublished(business, box) {
   const price = box.price != null ? ` ${box.price} TL` : '';
   await Notification.insertMany(
     fans.map((u) => ({
+      targetType: 'USER', // model artık USER/BUSINESS ayrımı istiyor
       user: u._id,
       type: 'BOX_PUBLISHED',
       business: business._id,

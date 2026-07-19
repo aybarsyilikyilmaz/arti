@@ -19,11 +19,18 @@ const protect = (...allowedRoles) => (req, res, next) => {
     return res.status(401).json({ status: 'fail', message: 'Oturum geçersiz veya süresi dolmuş.' });
   }
 
-  if (allowedRoles.length > 0 && !allowedRoles.includes(payload.role)) {
-    return res.status(403).json({ status: 'fail', message: 'Bu işlem için yetkiniz yok.' });
+  if (payload.role === 'employee') {
+    if (allowedRoles.length > 0 && !allowedRoles.includes('business') && !allowedRoles.includes('employee')) {
+      return res.status(403).json({ status: 'fail', message: 'Bu işlem için yetkiniz yok.' });
+    }
+    req.auth = { id: payload.businessId, role: 'business', employeeId: payload.sub };
+  } else {
+    if (allowedRoles.length > 0 && !allowedRoles.includes(payload.role)) {
+      return res.status(403).json({ status: 'fail', message: 'Bu işlem için yetkiniz yok.' });
+    }
+    req.auth = { id: payload.sub, role: payload.role };
   }
 
-  req.auth = { id: payload.sub, role: payload.role };
   next();
 };
 

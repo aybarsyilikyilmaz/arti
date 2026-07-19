@@ -13,6 +13,7 @@ const orderSchema = new mongoose.Schema({
   box: { type: mongoose.Schema.Types.ObjectId, ref: 'SurpriseBox', required: true },
 
   amount: { type: Number, required: true, min: 0 },
+  baseAmount: { type: Number, required: true, min: 0 },
 
   status: {
     type: String,

@@ -3,7 +3,7 @@
 // Veri kaynağı: GET /business/reports/summary + GET /business/orders/recent (tümü dinamik).
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -72,16 +72,19 @@ export default function Overview() {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [recentOrders, setRecentOrders] = useState([]);
+  const [reviews, setReviews] = useState({ average: 0, totalReviews: 0, recent: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       businessService.getSummary(7),
       businessService.getRecentOrders(),
+      businessService.getReviews().catch(() => ({ avgRating: 0, totalReviews: 0, reviews: [] })),
     ])
-      .then(([summary, orders]) => {
+      .then(([summary, orders, reviewData]) => {
         setData(summary);
-        setRecentOrders(orders);
+        setRecentOrders(orders.slice(0, 5));
+        setReviews(reviewData);
       })
       .catch((err) => push(apiErrorMessage(err, 'Rapor yüklenemedi.'), 'error'))
       .finally(() => setLoading(false));
@@ -277,14 +280,22 @@ export default function Overview() {
           {/* Son Siparişler Akışı */}
           <LightCard className="flex-1 p-5">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="flex items-center gap-2 text-sm font-bold text-gray-900">
-                <Clock className="h-4 w-4 text-indigo-500" /> Son Siparişler
-              </h3>
-              {recentOrders.length > 0 && (
-                <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-600">
-                  {recentOrders.length}
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-gray-900">
+                  <Clock className="h-4 w-4 text-indigo-500" /> Son Siparişler
+                </h3>
+                {recentOrders.length > 0 && (
+                  <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-600">
+                    {recentOrders.length}
+                  </span>
+                )}
+              </div>
+              <Link
+                to="/panel/siparisler"
+                className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 hover:text-emerald-700"
+              >
+                Tümünü Gör
+              </Link>
             </div>
 
             {recentOrders.length === 0 ? (
@@ -342,25 +353,62 @@ export default function Overview() {
               <Star className="h-4 w-4 text-amber-400" />
               <h3 className="text-sm font-bold text-gray-900">Müşteri Puanı</h3>
             </div>
-            <div className="flex flex-col items-center justify-center rounded-xl bg-gray-50/80 py-6 text-center">
-              <div className="mb-2 flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className="h-5 w-5 text-gray-200"
-                    fill="currentColor"
-                  />
-                ))}
+            
+            {reviews.totalReviews === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-xl bg-gray-50/80 py-6 text-center">
+                <div className="mb-2 flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star key={star} className="h-5 w-5 text-gray-200" fill="currentColor" />
+                  ))}
+                </div>
+                <p className="text-sm font-medium text-gray-400">Henüz değerlendirme yok</p>
+                <p className="mt-1 max-w-[200px] text-[11px] text-gray-300">
+                  Müşteriler siparişlerini teslim aldıktan sonra puanlama yapabilir
+                </p>
               </div>
-              <p className="text-sm font-medium text-gray-400">Henüz değerlendirme yok</p>
-              <p className="mt-1 max-w-[200px] text-[11px] text-gray-300">
-                Müşteriler kutularını teslim aldıktan sonra puanlama yapabilecek
-              </p>
-              <div className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-[11px] font-semibold text-amber-600">
-                <MessageSquare className="h-3 w-3" />
-                Yakında aktif
+            ) : (
+              <div>
+                <div className="mb-4 flex items-end gap-3">
+                  <span className="text-4xl font-black tracking-tighter text-gray-900">
+                    {(reviews.avgRating || 0).toFixed(1)}
+                  </span>
+                  <div className="mb-1.5 flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`h-4 w-4 ${
+                            star <= Math.round(reviews.avgRating || 0) ? 'text-amber-400' : 'text-gray-200'
+                          }`}
+                          fill="currentColor"
+                        />
+                      ))}
+                    </div>
+                    <span className="text-[11px] font-medium text-gray-400">
+                      {reviews.totalReviews || 0} değerlendirme
+                    </span>
+                  </div>
+                </div>
+
+                {(reviews.reviews || []).length > 0 && (
+                  <div className="space-y-3 border-t border-gray-100 pt-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Son Yorumlar</p>
+                    {(reviews.reviews || []).slice(0, 3).map((rev) => (
+                      <div key={rev.id} className="rounded-lg bg-gray-50 p-3">
+                        <div className="mb-1 flex items-center justify-between">
+                          <span className="text-xs font-semibold text-gray-800">{rev.customerName}</span>
+                          <span className="flex items-center gap-0.5 text-[10px] font-bold text-amber-500">
+                            <Star className="h-3 w-3" fill="currentColor" /> {rev.rating}
+                          </span>
+                        </div>
+                        {rev.comment && <p className="text-xs text-gray-600">{rev.comment}</p>}
+                        <p className="mt-1.5 text-[9px] text-gray-400">{timeAgo(rev.createdAt)}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </LightCard>
         </motion.div>
       </div>

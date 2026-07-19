@@ -8,6 +8,11 @@ const businessSchema = new mongoose.Schema({
     required: [true, 'İşletme adı zorunludur.'],
     trim: true
   },
+  branchName: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   email: {
     type: String,
     required: [true, 'E-posta adresi zorunludur.'],
@@ -51,6 +56,12 @@ const businessSchema = new mongoose.Schema({
     enum: ['tek', 'zincir'],
     default: 'tek'
   },
+  parentBusinessId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Business',
+    default: null,
+    index: true
+  },
   // İşletmeler admin onayından geçmeden kutu yayınlayamaz (PLAN.md §2)
   status: {
     type: String,
@@ -68,10 +79,22 @@ const businessSchema = new mongoose.Schema({
   // KVKK: VKN/TCKN at-rest AES-256-GCM şifreli tutulur; loglanmaz
   taxNumber: { type: String, trim: true, set: encryptField },
   mersisNumber: { type: String, trim: true },
+  
+  // Otomatik mesaj için son sorulma tarihi (YYYY-MM-DD)
+  lastPromptDate: { type: String },
+  
+  // Finans ve Ödemeler
+  iban: { type: String, trim: true },
+  ibanOwner: { type: String, trim: true },
+  payoutPeriod: {
+    type: String,
+    enum: ['daily', 'weekly', 'monthly'],
+    default: 'daily'
+  },
+  // Platform komisyonu (%) — işletme bazında admin panelden değiştirilebilir
+  commissionRate: { type: Number, min: 0, max: 50, default: 10 },
   // Konum detayı
-  city: { type: String, trim: true },
-  district: { type: String, trim: true },
-  neighborhood: { type: String, trim: true },
+  mapsUrl: { type: String, trim: true },
   // Yetkili kişi
   contactName: { type: String, trim: true },
   contactRole: {
@@ -108,6 +131,11 @@ const businessSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  // Admin onayına gidecek geçici profil güncellemeleri
+  pendingUpdates: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
   }
 });
 

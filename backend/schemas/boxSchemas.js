@@ -5,7 +5,7 @@ const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 // İşletmenin günlük kutu ilanı
 const upsertBoxSchema = z
   .object({
-    price: z.number({ message: 'Fiyat zorunludur.' }).positive('Fiyat pozitif olmalı.').max(100000),
+    basePrice: z.number({ message: 'Taban Fiyat zorunludur.' }).positive('Fiyat pozitif olmalı.').max(100000),
     originalPrice: z.number({ message: 'Normal fiyat zorunludur.' }).positive().max(100000),
     initialStock: z.number({ message: 'Stok adedi zorunludur.' }).int().min(1, 'En az 1 kutu.').max(500),
     contents: z.array(z.enum(['unlu', 'sicak', 'meze', 'manav', 'karisik', 'vegan', 'tatli', 'sandvic', 'sarkuteri', 'et', 'glutensiz', 'fastfood', 'donut', 'ekler', 'sushi']))
@@ -14,9 +14,9 @@ const upsertBoxSchema = z
     pickupStart: z.string().regex(TIME_RE, 'Saat SS:DD biçiminde olmalı.'),
     pickupEnd: z.string().regex(TIME_RE, 'Saat SS:DD biçiminde olmalı.'),
   })
-  .refine((d) => d.price < d.originalPrice, {
+  .refine((d) => d.basePrice < d.originalPrice, {
     message: 'İndirimli fiyat normal fiyattan düşük olmalı.',
-    path: ['price'],
+    path: ['basePrice'],
   })
   .refine((d) => d.pickupEnd > d.pickupStart, {
     message: 'Teslim bitiş saati başlangıçtan sonra olmalı.',

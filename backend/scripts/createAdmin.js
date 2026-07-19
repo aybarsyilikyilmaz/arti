@@ -10,8 +10,8 @@ async function main() {
     console.error('Kullanım: node scripts/createAdmin.js <email> <sifre> [superadmin|operator]');
     process.exit(1);
   }
-  if (password.length < 12) {
-    console.error('Admin şifresi en az 12 karakter olmalı.');
+  if (password.length < 8) {
+    console.error('Admin şifresi en az 8 karakter olmalı.');
     process.exit(1);
   }
 

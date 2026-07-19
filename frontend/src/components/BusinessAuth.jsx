@@ -137,14 +137,13 @@ export default function BusinessAuth() {
     name: '',
     businessType: '',
     branchType: 'tek',
+    branchName: '',
     // Adım 2 — Yasal & iletişim
     legalName: '',
     taxOffice: '',
     taxNumber: '',
     mersisNumber: '',
-    city: '',
-    district: '',
-    neighborhood: '',
+    mapsUrl: '',
     address: '',
     phone: '',
     contactName: '',
@@ -194,7 +193,7 @@ export default function BusinessAuth() {
     if (s === 1) {
       if (!formData.legalName.trim()) return 'Resmi şirket unvanını girin.';
       if (!formData.taxOffice.trim() || !formData.taxNumber.trim()) return 'Vergi dairesi ve vergi numarası zorunludur.';
-      if (!formData.city.trim() || !formData.district.trim()) return 'Şehir ve ilçe bilgisini girin.';
+      if (!formData.address.trim()) return 'Adres bilgisi zorunludur.';
       if (!formData.address.trim()) return 'Tam adresi girin.';
       if (!formData.phone.trim()) return 'İşletme telefonunu girin.';
       if (!formData.contactName.trim()) return 'Yetkili adı-soyadını girin.';
@@ -508,6 +507,10 @@ export default function BusinessAuth() {
                             ))}
                           </div>
                         </Field>
+
+                        <Field label="Şube / Bölge Adı" hint="(Opsiyonel, örn: Caferağa Şubesi)">
+                          <input name="branchName" type="text" placeholder="Merkez, Moda, Kadıköy vb." value={formData.branchName} onChange={handleChange} className={inputCls} />
+                        </Field>
                       </>
                     )}
 
@@ -532,36 +535,9 @@ export default function BusinessAuth() {
                         </Field>
 
                         <div className="border-t border-gray-100 pt-5">
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <Field label="Şehir">
-                              <select
-                                name="city"
-                                value={formData.city}
-                                onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value, district: '', neighborhood: '' }))}
-                                className={inputCls}
-                              >
-                                <option value="">Seçiniz</option>
-                                {Object.keys(turkeyZones).map((c) => (
-                                  <option key={c} value={c}>{c}</option>
-                                ))}
-                              </select>
-                            </Field>
-                            <Field label="İlçe">
-                              <select
-                                name="district"
-                                value={formData.district}
-                                onChange={handleChange}
-                                disabled={!formData.city}
-                                className={inputCls}
-                              >
-                                <option value="">Seçiniz</option>
-                                {formData.city && turkeyZones[formData.city].map((d) => (
-                                  <option key={d} value={d}>{d}</option>
-                                ))}
-                              </select>
-                            </Field>
-                            <Field label="Mahalle">
-                              <input name="neighborhood" type="text" placeholder="örn: Caferağa" value={formData.neighborhood} onChange={handleChange} className={inputCls} />
+                          <div className="grid grid-cols-1 gap-4">
+                            <Field label="Google Maps Konum Linki" hint="(Uygulamada gösterilecek konum)">
+                              <input name="mapsUrl" type="url" placeholder="https://maps.app.goo.gl/..." value={formData.mapsUrl} onChange={handleChange} className={inputCls} />
                             </Field>
                           </div>
                           <div className="mt-4">

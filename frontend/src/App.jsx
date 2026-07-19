@@ -2,12 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import AdminLayout from './pages/admin/AdminLayout';
 import BusinessApprovals from './pages/admin/BusinessApprovals';
-import OutreachQueue from './pages/admin/OutreachQueue';
+import AdminBusinessCreate from './pages/admin/AdminBusinessCreate';
+import BusinessDetail from './pages/admin/BusinessDetail';
+import AdminTickets from './pages/admin/AdminTickets';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminOrders from './pages/admin/AdminOrders';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminFinance from './pages/admin/AdminFinance';
+import AdminReviews from './pages/admin/AdminReviews';
 import BusinessLayout from './pages/business/BusinessLayout';
 import Overview from './pages/business/Overview';
+import OrdersPage from './pages/business/OrdersPage';
 import BoxManager from './pages/business/BoxManager';
+import FinancePage from './pages/business/FinancePage';
 import BusinessSettings from './pages/business/BusinessSettings';
+import BusinessProfile from './pages/business/BusinessProfile';
 import StorefrontEditor from './pages/business/StorefrontEditor';
+import TeamManager from './pages/business/TeamManager';
+import BusinessTickets from './pages/business/BusinessTickets';
 import Hero from './components/Hero';
 import InfoSection from './components/InfoSection';
 import BusinessAuth from './components/BusinessAuth';
@@ -117,16 +129,28 @@ function App() {
         {/* Admin girişi ayrı sayfa değildir — tek kapı /business giriş formudur */}
         <Route path="/admin" element={<Navigate to="/business" state={{ mode: 'login' }} replace />} />
         <Route path="/admin/panel" element={<AdminLayout />}>
-          <Route index element={<Navigate to="isletmeler" replace />} />
+          <Route index element={<Navigate to="genel-bakis" replace />} />
+          <Route path="genel-bakis" element={<AdminDashboard />} />
           <Route path="isletmeler" element={<BusinessApprovals />} />
-          <Route path="whatsapp" element={<OutreachQueue />} />
+          <Route path="isletmeler/yeni" element={<AdminBusinessCreate />} />
+          <Route path="isletmeler/:id" element={<BusinessDetail />} />
+          <Route path="siparisler" element={<AdminOrders />} />
+          <Route path="kullanicilar" element={<AdminUsers />} />
+          <Route path="finans" element={<AdminFinance />} />
+          <Route path="yorumlar" element={<AdminReviews />} />
+          <Route path="destek" element={<AdminTickets />} />
         </Route>
         <Route path="/panel" element={<BusinessLayout />}>
           <Route index element={<Navigate to="genel-bakis" replace />} />
           <Route path="genel-bakis" element={<Overview />} />
+          <Route path="siparisler" element={<OrdersPage />} />
           <Route path="kutu" element={<BoxManager />} />
+          <Route path="finans" element={<FinancePage />} />
           <Route path="vitrin" element={<StorefrontEditor />} />
           <Route path="ayarlar" element={<BusinessSettings />} />
+          <Route path="profil" element={<BusinessProfile />} />
+          <Route path="ekip" element={<TeamManager />} />
+          <Route path="destek" element={<BusinessTickets />} />
         </Route>
       </Routes>
     );

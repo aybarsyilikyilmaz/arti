@@ -1,5 +1,6 @@
 const express = require('express');
 const orderController = require('../controllers/orderController');
+const reviewController = require('../controllers/reviewController');
 const { validateBody } = require('../middleware/validate');
 const { protect } = require('../middleware/auth');
 const { checkoutSchema } = require('../schemas/boxSchemas');
@@ -18,5 +19,8 @@ const checkoutLimiter = rateLimit({
 
 router.post('/checkout', protect('user'), checkoutLimiter, validateBody(checkoutSchema), orderController.checkout);
 router.get('/mine', protect('user'), orderController.myOrders);
+
+// Müşteri değerlendirmesi: teslim alınan siparişe puan + yorum
+router.post('/review', protect('user'), reviewController.submitReview);
 
 module.exports = router;

@@ -1,12 +1,41 @@
 // İşletme paneli API çağrıları — backend /api/v1/business/* uçlarıyla birebir.
-import { api } from './api';
+import { api, setSession } from './api';
 
 // Profil
 export const getMe = () =>
-  api.get('/business/me').then((r) => r.data.data.business);
+  api.get('/business/me').then((r) => r.data.data);
+
+// Çalışan / Ekip Yönetimi
+export const getEmployees = () =>
+  api.get('/business/employees').then((r) => r.data.data.employees);
+
+export const createEmployee = (payload) =>
+  api.post('/business/employees', payload).then((r) => r.data.data.employee);
+
+export const updateEmployee = (id, payload) =>
+  api.patch(`/business/employees/${id}`, payload).then((r) => r.data.data.employee);
+
+export const deleteEmployee = (id) =>
+  api.delete(`/business/employees/${id}`).then((r) => r.data);
 
 export const updateProfile = (payload) =>
   api.patch('/business/profile', payload).then((r) => r.data);
+
+export const updateProfileRequest = (payload) =>
+  api.post('/business/profile/update-request', payload).then((r) => r.data);
+
+// Destek / Bilet Sistemi
+export const listTickets = () =>
+  api.get('/tickets').then((r) => r.data.data.tickets);
+
+export const createTicket = (payload) =>
+  api.post('/tickets', payload).then((r) => r.data.data.ticket);
+
+export const addTicketMessage = (id, message) =>
+  api.post(`/tickets/${id}/messages`, { message }).then((r) => r.data.data.ticket);
+
+export const closeTicket = (id) =>
+  api.patch(`/tickets/${id}/close`).then((r) => r.data.data.ticket);
 
 // Bugünün kutusu
 export const getTodayBox = () =>
@@ -23,9 +52,37 @@ export const verifyPickup = (qrToken) =>
 export const getSummary = (days = 7) =>
   api.get('/business/reports/summary', { params: { days } }).then((r) => r.data.data);
 
+// FİNANS & ÖDEMELER
+export const getFinanceOverview = () =>
+  api.get('/business/finance/overview').then((r) => r.data.data);
+
+export const getPayouts = (page = 1) =>
+  api.get('/business/finance/payouts', { params: { page } }).then((r) => r.data.data);
+
+export const updateIban = (data) =>
+  api.put('/business/finance/iban', data).then((r) => r.data.data);
+
+// Bildirimler
+export const getNotifications = () =>
+  api.get('/business/notifications').then((r) => r.data.data);
+
+export const markNotificationAsRead = (id) =>
+  api.patch(`/business/notifications/${id}/read`).then((r) => r.data.data);
+
+export const markAllNotificationsAsRead = () =>
+  api.patch('/business/notifications/read-all').then((r) => r.data);
+
 // Son siparişler: aktivite akışı (Genel Bakış sayfası)
 export const getRecentOrders = () =>
   api.get('/business/orders/recent').then((r) => r.data.data.orders);
+
+// Tüm siparişler: sayfalı liste (Siparişlerim sayfası)
+export const getAllOrders = (page = 1, limit = 20) =>
+  api.get('/business/orders', { params: { page, limit } }).then((r) => r.data.data);
+
+// Müşteri değerlendirmeleri (ortalama puan + son yorumlar)
+export const getReviews = () =>
+  api.get('/business/reviews').then((r) => r.data.data);
 
 // Vitrin görselleri — presigned akış: izin al → dosyayı doğrudan depoya PUT et
 // (lokalde API'ye, üretimde S3'e; istemci tarafında hiçbir fark yok)
@@ -40,3 +97,16 @@ export const uploadImage = async (kind, file) => {
 
 export const setImages = (payload) =>
   api.patch('/business/profile/images', payload).then((r) => r.data);
+
+// Şube (Zincir) Yönetimi
+export const getBranches = () =>
+  api.get('/business/branches').then((r) => r.data.data);
+
+export const createBranch = (payload) =>
+  api.post('/business/branches', payload).then((r) => r.data);
+
+export const switchBranch = async (targetId) => {
+  const res = await api.post('/business/switch-branch', { targetId }).then((r) => r.data);
+  setSession('business', res.accessToken);
+  return res;
+};

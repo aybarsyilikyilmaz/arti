@@ -82,7 +82,7 @@ async function main() {
   // --- 2. Kutu yayını → bildirim ---
   const boxRes = await api('/api/v1/business/boxes', {
     method: 'POST', token: bizToken,
-    body: { price: 200, originalPrice: 500, initialStock: 10, contents: ['unlu'], pickupStart: '18:00', pickupEnd: '21:00' },
+    body: { basePrice: 200, originalPrice: 500, initialStock: 10, contents: ['unlu'], pickupStart: '18:00', pickupEnd: '21:00' },
   });
   const boxId = boxRes.data?.data?.box?._id;
   check('Kutu yayınlandı', boxRes.status === 201, JSON.stringify(boxRes.data));
@@ -100,6 +100,10 @@ async function main() {
   check('Okundu işaretlendi (unreadCount 0)', notifs2.data?.unreadCount === 0);
 
   // --- 3. Fraud: aktif rezervasyon limiti ---
+  // Önceki test çalışmalarından kalabilecek RESERVED siparişleri temizle
+  const userDb2 = await User.findOne({ email: userEmail });
+  await Order.deleteMany({ user: userDb2._id, status: 'RESERVED' });
+
   const cos = [];
   for (let i = 0; i < 3; i += 1) {
     cos.push(await api('/api/v1/orders/checkout', { method: 'POST', token: userToken, body: { boxId } }));
@@ -126,10 +130,13 @@ async function main() {
   const d = report.data?.data;
   check('Rapor döndü', report.status === 200, JSON.stringify(report.data));
   check('Bugünün kutusu raporda (satılan 4)', d?.today?.published === true && d?.today?.sold === 4, JSON.stringify(d?.today));
-  check('Ciro yalnızca ödenen siparişten (200)', d?.totals?.revenue === 200, JSON.stringify(d?.totals));
+  // basePrice=200, rate=%10 → müşteriden alınan price=220
+  // rapordaki revenue = sipariş.amount toplamı (müşteri ödemesi)
+  const expectedPrice = Math.round(200 * 1.1); // 220
+  check('Ciro ödenen siparişten (price=220)', d?.totals?.revenue === expectedPrice, JSON.stringify(d?.totals));
   check('Durum kırılımı doğru (3 RESERVED + 1 PAID)',
     d?.totals?.byStatus?.RESERVED === 3 && d?.totals?.byStatus?.PAID === 1, JSON.stringify(d?.totals?.byStatus));
-  check('Günlük seri bugünü içeriyor', Array.isArray(d?.daily) && d.daily.length === 1 && d.daily[0].revenue === 200);
+  check('Günlük seri bugünü içeriyor', Array.isArray(d?.daily) && d.daily.length === 1 && d.daily[0].revenue === expectedPrice);
 
   const badDays = await api('/api/v1/business/reports/summary?days=99', { token: bizToken });
   check('days=99 reddedildi (400)', badDays.status === 400);

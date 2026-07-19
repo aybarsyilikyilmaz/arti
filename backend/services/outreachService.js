@@ -5,7 +5,6 @@
 // Tüm adımlar idempotent: OutreachLog {business,date} unique + kutu {business,date} unique.
 const Business = require('../models/Business');
 const SurpriseBox = require('../models/SurpriseBox');
-const OutreachLog = require('../models/OutreachLog');
 const desk360 = require('./desk360');
 const { todayIstanbul, minutesUntilIstanbul } = require('../utils/time');
 const env = require('../config/env');
@@ -28,11 +27,15 @@ function hasPublishDefaults(business) {
 }
 
 function boxDefaults(business) {
+  const rate = business.commissionRate ?? 10;
+  const price = Math.round(business.defaultPrice * (1 + rate / 100));
+
   return {
     business: business._id,
     businessName: business.name,
     date: todayIstanbul(),
-    price: business.defaultPrice,
+    basePrice: business.defaultPrice,
+    price,
     originalPrice: business.defaultOriginalPrice,
     contents: business.boxContents?.length ? business.boxContents : ['karisik'],
     pickupStart: business.pickupStart || '18:00',
@@ -59,31 +62,23 @@ async function applyCount(business, count, replyText) {
     outcome = 'PENDING_REVIEW_NO_PRICE'; // fiyat bilinmeden otomatik yayın yapılmaz
   }
 
+  // Artık sadece log atılıyor, OutreachLog veritabanına yazılmıyor
   const applied = outcome.startsWith('APPLIED');
-  await OutreachLog.findOneAndUpdate(
-    { business: business._id, date },
-    {
-      status: applied ? 'REPLIED' : 'PENDING_REVIEW',
-      repliedAt: new Date(),
-      ...(replyText !== undefined ? { replyText } : {}),
-      ...(applied ? { parsedCount: count } : {}),
-    },
-    { upsert: true }
-  );
+  if (applied) {
+    logger.info({ business: business.name, count, outcome }, 'Webhook: Başarıyla stoka işlendi');
+  } else {
+    logger.info({ business: business.name, outcome }, 'Webhook: Kutu açılamadı');
+  }
 
   return outcome;
 }
 
-// Webhook cevabı: sayı çıkarılamazsa sessizce yutulmaz, admin kuyruğuna düşer
+// Webhook cevabı: sayı çıkarılamazsa admin kuyruğuna düşmek yerine sessizce yutulup log atılır
 async function applyReply(business, replyText) {
   const count = parseCount(replyText);
   if (count === null) {
-    await OutreachLog.findOneAndUpdate(
-      { business: business._id, date: todayIstanbul() },
-      { status: 'PENDING_REVIEW', repliedAt: new Date(), replyText },
-      { upsert: true }
-    );
-    return 'PENDING_REVIEW_UNPARSED';
+    logger.info({ business: business.name, replyText }, 'Webhook: Sayı çıkarılamadı, yoksayıldı.');
+    return 'PENDING_REVIEW_UNPARSED'; // Yutuldu
   }
   return applyCount(business, count, replyText);
 }
@@ -95,6 +90,7 @@ async function sweepOutreach() {
   const candidates = await Business.find({
     status: 'APPROVED',
     pickupStart: { $exists: true, $nin: [null, ''] },
+    lastPromptDate: { $ne: date }
   }).select('name pickupStart whatsappPhone desk360ChatId');
 
   let sent = 0;
@@ -102,15 +98,9 @@ async function sweepOutreach() {
     const mins = minutesUntilIstanbul(business.pickupStart);
     if (mins <= 0 || mins > env.outreachLeadMin) continue;
 
-    try {
-      // Önce log (unique indeks çifte mesajı süreç çökse bile engeller)
-      await OutreachLog.create({ business: business._id, date, status: 'SENT', sentAt: new Date() });
-    } catch (err) {
-      if (err.code === 11000) continue; // bugün zaten işlendi
-      throw err;
-    }
-
+    // Sadece bir kere atması için lastPromptDate güncellenir
     await desk360.sendDailyPrompt(business);
+    await Business.updateOne({ _id: business._id }, { lastPromptDate: date });
     sent += 1;
   }
 
@@ -150,12 +140,7 @@ async function sweepFallback() {
     }
     require('./notificationService').notifyBoxPublishedSafe(business, created);
 
-    // REPLIED durumunu ezmeden fallback bilgisini işle
-    await OutreachLog.findOneAndUpdate(
-      { business: business._id, date, status: { $ne: 'REPLIED' } },
-      { status: 'FALLBACK_PUBLISHED' },
-      { upsert: false }
-    );
+    // Fallback loglaması kaldırıldı
     published += 1;
     logger.info({ business: business.name, count: business.defaultPackageCount }, 'Fallback kutu yayınlandı');
   }

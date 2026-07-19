@@ -4,16 +4,23 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Package, Settings, LogOut, Store, Hourglass, ImageIcon, Bell, User } from 'lucide-react';
+import { LayoutDashboard, Package, Settings, LogOut, Store, Hourglass, ImageIcon, Bell, User, ShoppingBag, Banknote, LifeBuoy } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import * as businessService from '../../services/businessService';
 import { Spinner, StatusBadge } from '../../components/admin/AdminUI';
 
+import BranchSwitcher from '../../components/business/BranchSwitcher';
+
 const NAV = [
   { to: 'genel-bakis', label: 'Genel Bakış', icon: LayoutDashboard },
+  { to: 'siparisler', label: 'Siparişlerim', icon: ShoppingBag },
   { to: 'kutu', label: 'Kutu & Teslimat', icon: Package },
+  { to: 'finans', label: 'Finans & Ödemeler', icon: Banknote },
   { to: 'vitrin', label: 'Vitrin Yönetimi', icon: ImageIcon },
+  { to: 'profil', label: 'Profilim', icon: User },
   { to: 'ayarlar', label: 'Ayarlar', icon: Settings },
+  { to: 'ekip', label: 'Ekip Yönetimi', icon: User, adminOnly: true },
+  { to: 'destek', label: 'Destek', icon: LifeBuoy },
 ];
 
 export default function BusinessLayout() {
@@ -21,18 +28,41 @@ export default function BusinessLayout() {
   const location = useLocation();
   const { authed, restoring, logout } = useAuth('business');
   const [me, setMe] = useState(null);
-  const [todayOrderCount, setTodayOrderCount] = useState(0);
+  const [employeeData, setEmployeeData] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   const reloadMe = useCallback(async () => {
     try {
-      const [profile, summary] = await Promise.all([
+      const [profileData, notifData] = await Promise.all([
         businessService.getMe(),
-        businessService.getSummary(1).catch(() => null),
+        businessService.getNotifications().catch(() => ({ unreadCount: 0, notifications: [] })),
       ]);
-      setMe(profile);
-      if (summary) setTodayOrderCount(summary.todayOrderCount || 0);
-    } catch { /* guard yakalar */ }
+      setMe(profileData.business);
+      setEmployeeData(profileData.employee || null);
+      if (notifData) {
+        setNotifications(notifData.notifications || []);
+        setUnreadCount(notifData.unreadCount || 0);
+      }
+    } catch {}
   }, []);
+
+  const handleMarkAsRead = async (id) => {
+    try {
+      await businessService.markNotificationAsRead(id);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch {}
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await businessService.markAllNotificationsAsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+    } catch {}
+  };
 
   useEffect(() => { if (authed) reloadMe(); }, [authed, reloadMe]);
 
@@ -78,7 +108,7 @@ export default function BusinessLayout() {
             </div>
             <div className="hidden min-w-0 lg:block">
               <p className="truncate text-sm font-bold leading-tight tracking-tight text-gray-900">
-                {me?.name || 'İşletme Paneli'}
+                {me?.name || 'İşletme Paneli'}{me?.branchName ? ` - ${me.branchName}` : ''}
               </p>
               <p className="text-[11px] font-medium text-gray-400">Artı+ İşletme</p>
             </div>
@@ -86,7 +116,13 @@ export default function BusinessLayout() {
 
           {/* Menü — aktif pil sekmeler arasında süzülür */}
           <nav className="flex flex-1 flex-col gap-1">
-            {NAV.map(({ to, label, icon: Icon }) => {
+            {NAV.filter(item => {
+              if (item.adminOnly && employeeData) return false;
+              if (employeeData) {
+                return employeeData.allowedPages?.includes(item.to);
+              }
+              return true;
+            }).map(({ to, label, icon: Icon }) => {
               const active = location.pathname.endsWith(`/${to}`);
               return (
                 <NavLink
@@ -125,23 +161,21 @@ export default function BusinessLayout() {
           </div>
         </motion.aside>
 
-        {/* İçerik */}
         <main className="min-w-0 flex-1">
-          {/* Üst Bar: Bildirim Çanı + Profil */}
           <div className="mb-5 flex items-center justify-end gap-3">
-            {/* Bildirim çanı */}
+            {!employeeData && <BranchSwitcher me={me} />}
             <button
               className="relative rounded-xl border border-gray-200 bg-white p-2.5 text-gray-400 shadow-sm transition-all duration-300 hover:bg-gray-50 hover:text-gray-600 hover:shadow-md active:scale-95"
-              title="Bugünkü siparişler"
+              title="Bildirimler"
             >
               <Bell className="h-[18px] w-[18px]" />
-              {todayOrderCount > 0 && (
+              {unreadCount > 0 && (
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white shadow-lg shadow-emerald-200"
                 >
-                  {todayOrderCount > 99 ? '99+' : todayOrderCount}
+                  {unreadCount > 99 ? '99+' : unreadCount}
                 </motion.span>
               )}
             </button>
@@ -157,7 +191,6 @@ export default function BusinessLayout() {
               </div>
               <div className="hidden min-w-0 sm:block">
                 <p className="truncate text-xs font-semibold text-gray-700">{me?.name || 'İşletme'}</p>
-                <p className="text-[10px] text-gray-400">{me?.email || ''}</p>
               </div>
             </div>
           </div>
@@ -189,7 +222,28 @@ export default function BusinessLayout() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           >
-            <Outlet context={{ me, reloadMe }} />
+            {(() => {
+              const currentPath = location.pathname.split('/').pop();
+              const currentNavItem = NAV.find(item => item.to === currentPath);
+              
+              if (employeeData && currentNavItem) {
+                if (currentNavItem.adminOnly || !employeeData.allowedPages?.includes(currentPath)) {
+                  const defaultPage = employeeData.allowedPages?.length > 0 ? employeeData.allowedPages[0] : null;
+                  if (defaultPage && currentPath !== defaultPage) {
+                    return <Navigate to={`/panel/${defaultPage}`} replace />;
+                  } else if (!defaultPage) {
+                    return (
+                      <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <Shield className="mb-4 h-12 w-12 text-gray-300" />
+                        <h3 className="text-lg font-semibold text-gray-900">Yetkiniz Yok</h3>
+                        <p className="mt-2 text-sm text-gray-500">Bu panele erişim yetkiniz bulunmamaktadır. Lütfen yöneticinizle iletişime geçin.</p>
+                      </div>
+                    );
+                  }
+                }
+              }
+              return <Outlet context={{ me, reloadMe, employeeData }} />;
+            })()}
           </motion.div>
         </main>
       </div>

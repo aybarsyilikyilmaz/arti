@@ -1,4 +1,5 @@
 const SurpriseBox = require('../models/SurpriseBox');
+const { getMarkupRate } = require('./settingsController');
 const { todayIstanbul } = require('../utils/time');
 
 // İşletme: bugünün kutusunu oluştur/güncelle (tek kayıt, upsert değil —
@@ -7,15 +8,29 @@ exports.upsertTodayBox = async (req, res, next) => {
   try {
     const business = req.business; // requireApprovedBusiness doldurur
     const date = todayIstanbul();
-    const { price, originalPrice, initialStock, contents, pickupStart, pickupEnd } = req.body;
+    const { basePrice, originalPrice, initialStock, contents, pickupStart, pickupEnd } = req.body;
+    const rate = await getMarkupRate();
+    const price = Math.round(basePrice * (1 + rate / 100));
 
     const existing = await SurpriseBox.findOne({ business: business._id, date });
     if (existing) {
       // Stok artışı: satılan adedi koruyarak remaining'i büyüt
       const sold = existing.initialStock + existing.extraStock - existing.remaining;
       const newRemaining = Math.max(initialStock - sold, 0);
-      existing.set({ price, originalPrice, initialStock, contents, pickupStart, pickupEnd, remaining: newRemaining });
+      existing.set({ basePrice, price, originalPrice, initialStock, contents, pickupStart, pickupEnd, remaining: newRemaining });
       await existing.save();
+
+      // Ayrıca işletmenin varsayılan ayarlarını (şablonunu) güncelle
+      business.set({
+        defaultPackageCount: initialStock,
+        defaultPrice: basePrice,
+        defaultOriginalPrice: originalPrice,
+        pickupStart,
+        pickupEnd,
+        boxContents: contents,
+      });
+      await business.save();
+
       return res.status(200).json({ status: 'success', data: { box: existing } });
     }
 
@@ -23,6 +38,7 @@ exports.upsertTodayBox = async (req, res, next) => {
       business: business._id,
       businessName: business.name,
       date,
+      basePrice,
       price,
       originalPrice,
       initialStock,
@@ -32,6 +48,17 @@ exports.upsertTodayBox = async (req, res, next) => {
       pickupEnd,
       location: business.location?.coordinates ? business.location : undefined,
     });
+
+    // Ayrıca işletmenin varsayılan ayarlarını (şablonunu) güncelle
+    business.set({
+      defaultPackageCount: initialStock,
+      defaultPrice: basePrice,
+      defaultOriginalPrice: originalPrice,
+      pickupStart,
+      pickupEnd,
+      boxContents: contents,
+    });
+    await business.save();
 
     // Favorileyen kullanıcılara uygulama içi bildirim (akışı asla kesmez)
     require('../services/notificationService').notifyBoxPublishedSafe(business, box);

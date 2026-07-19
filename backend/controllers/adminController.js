@@ -1,9 +1,7 @@
 const AdminUser = require('../models/AdminUser');
 const Business = require('../models/Business');
-const OutreachLog = require('../models/OutreachLog');
 const tokenService = require('../services/tokenService');
 const orderService = require('../services/orderService');
-const outreachService = require('../services/outreachService');
 
 exports.login = async (req, res, next) => {
   try {
@@ -42,8 +40,11 @@ exports.logout = async (req, res, next) => {
 
 exports.listBusinesses = async (req, res, next) => {
   try {
-    const { status, page, limit } = req.query;
-    const filter = status ? { status } : {};
+    const { status, hasPendingUpdates, page = 1, limit = 50 } = req.query;
+    const filter = {};
+    if (status) filter.status = status;
+    if (hasPendingUpdates === 'true') filter.pendingUpdates = { $ne: null };
+
     const businesses = await Business.find(filter)
       .sort('-createdAt')
       .skip((page - 1) * limit)
@@ -59,14 +60,31 @@ exports.listBusinesses = async (req, res, next) => {
   }
 };
 
-// Vergi doğrulama ekranı: şifreli VKN yalnızca burada, tekil kayıtta çözülür
+// Vergi doğrulama ekranı: şifreli VKN yalnızca burada, tekil kayıtta çözülür.
+// stats bloğu detay sayfasındaki sekme rozetlerini besler.
 exports.getBusinessDetail = async (req, res, next) => {
   try {
     const business = await Business.findById(req.params.id);
     if (!business) return res.status(404).json({ status: 'fail', message: 'İşletme bulunamadı.' });
+
+    const Order = require('../models/Order');
+    const Employee = require('../models/Employee');
+    const SurpriseBox = require('../models/SurpriseBox');
+    const { todayIstanbul } = require('../utils/time');
+
+    const [orderCount, employeeCount, branchCount, todayBox] = await Promise.all([
+      Order.countDocuments({ business: business._id }),
+      Employee.countDocuments({ business: business._id }),
+      Business.countDocuments({ parentBusinessId: business._id }),
+      SurpriseBox.exists({ business: business._id, date: todayIstanbul() }),
+    ]);
+
     res.status(200).json({
       status: 'success',
-      data: { business: { ...business.toSafeJSON(), taxNumber: business.getTaxNumber() } },
+      data: {
+        business: { ...business.toSafeJSON(), taxNumber: business.getTaxNumber() },
+        stats: { orderCount, employeeCount, branchCount, todayPublished: Boolean(todayBox) },
+      },
     });
   } catch (err) {
     next(err);
@@ -86,54 +104,36 @@ const setStatus = (status, successMessage) => async (req, res, next) => {
 exports.approveBusiness = setStatus('APPROVED', 'İşletme onaylandı.');
 exports.suspendBusiness = setStatus('SUSPENDED', 'İşletme askıya alındı.');
 
-// Parse edilemeyen / fiyatı eksik WhatsApp cevapları burada listelenir
-exports.listOutreach = async (req, res, next) => {
+exports.approveProfileUpdate = async (req, res, next) => {
   try {
-    const { status, page, limit } = req.query;
-    const filter = status ? { status } : {};
-    const logs = await OutreachLog.find(filter)
-      .sort('-createdAt')
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .populate('business', 'name phone whatsappPhone');
-    const total = await OutreachLog.countDocuments(filter);
-    res.status(200).json({ status: 'success', total, data: { logs } });
+    const business = await Business.findById(req.params.id);
+    if (!business) return res.status(404).json({ status: 'fail', message: 'İşletme bulunamadı.' });
+    if (!business.pendingUpdates) return res.status(400).json({ status: 'fail', message: 'Bekleyen güncelleme yok.' });
+
+    Object.assign(business, business.pendingUpdates);
+    business.pendingUpdates = null;
+    await business.save();
+
+    res.status(200).json({ status: 'success', message: 'Profil güncellemeleri onaylandı.', data: { business: business.toSafeJSON() } });
   } catch (err) {
     next(err);
   }
 };
 
-// Admin, mesajı okuyup kutu adedini elle işler (PENDING_REVIEW çözümü)
-exports.applyOutreach = async (req, res, next) => {
+exports.rejectProfileUpdate = async (req, res, next) => {
   try {
-    const log = await OutreachLog.findById(req.params.id).populate('business');
-    if (!log) return res.status(404).json({ status: 'fail', message: 'Kayıt bulunamadı.' });
-    if (!log.business) return res.status(409).json({ status: 'fail', message: 'İşletme silinmiş.' });
+    const business = await Business.findById(req.params.id);
+    if (!business) return res.status(404).json({ status: 'fail', message: 'İşletme bulunamadı.' });
+    if (!business.pendingUpdates) return res.status(400).json({ status: 'fail', message: 'Bekleyen güncelleme yok.' });
 
-    const outcome = await outreachService.applyCount(log.business, req.body.count, log.replyText);
-    const ok = outcome.startsWith('APPLIED');
-    res.status(ok ? 200 : 409).json({
-      status: ok ? 'success' : 'fail',
-      message: ok ? 'Stok işlendi.' : 'İşlenemedi: işletmenin varsayılan fiyatları tanımlı değil.',
-      outcome,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
+    business.pendingUpdates = null;
+    await business.save();
 
-// PENDING_REVIEW kaydını işlem yapmadan kapatır ("yoksay") — kuyruk temiz kalır
-exports.dismissOutreach = async (req, res, next) => {
-  try {
-    const log = await OutreachLog.findOneAndUpdate(
-      { _id: req.params.id, status: 'PENDING_REVIEW' },
-      { status: 'DISMISSED' },
-      { new: true }
-    );
-    if (!log) {
-      return res.status(409).json({ status: 'fail', message: 'Kayıt bulunamadı ya da incelemede değil.' });
-    }
-    res.status(200).json({ status: 'success', message: 'Kayıt yoksayıldı.' });
+    const reason = req.body.reason || 'Profil güncelleme talebiniz uygun bulunmadı.';
+    // TODO: Send email and whatsapp notification here
+    console.log(`[Notification] To: ${business.email}, WhatsApp: ${business.whatsappPhone} - Reason: ${reason}`);
+
+    res.status(200).json({ status: 'success', message: 'Profil güncellemeleri reddedildi ve işletmeye bildirildi.', data: { business: business.toSafeJSON() } });
   } catch (err) {
     next(err);
   }

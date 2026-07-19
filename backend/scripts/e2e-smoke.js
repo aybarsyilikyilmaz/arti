@@ -68,7 +68,7 @@ async function main() {
   // --- 2. Onaysız işletme kutu açamaz ---
   const boxDenied = await api('/api/v1/business/boxes', {
     method: 'POST', token: bizToken,
-    body: { price: 250, originalPrice: 500, initialStock: 2, contents: ['unlu'], pickupStart: '18:00', pickupEnd: '21:00' },
+    body: { basePrice: 250, originalPrice: 500, initialStock: 2, contents: ['unlu'], pickupStart: '18:00', pickupEnd: '21:00' },
   });
   check('Onaysız işletme kutu açamaz (403)', boxDenied.status === 403);
 
@@ -86,7 +86,7 @@ async function main() {
   // --- 4. Kutu oluşturma ---
   const boxRes = await api('/api/v1/business/boxes', {
     method: 'POST', token: bizToken,
-    body: { price: 250, originalPrice: 500, initialStock: 2, contents: ['unlu', 'vegan'], pickupStart: '18:00', pickupEnd: '21:00' },
+    body: { basePrice: 250, originalPrice: 500, initialStock: 2, contents: ['unlu', 'vegan'], pickupStart: '18:00', pickupEnd: '21:00' },
   });
   check('Kutu oluşturuldu (201)', boxRes.status === 201, JSON.stringify(boxRes.data));
   const boxId = boxRes.data?.data?.box?._id;

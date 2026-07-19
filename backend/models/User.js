@@ -36,6 +36,11 @@ const userSchema = new mongoose.Schema({
   kvkkConsentAt: {
     type: Date
   },
+  // Moderasyon: doluysa hesap engellidir, giriş yapamaz (admin paneli)
+  bannedAt: {
+    type: Date,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now

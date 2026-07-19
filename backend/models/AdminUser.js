@@ -12,7 +12,7 @@ const adminUserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 12,
+    minlength: 8,
     select: false
   },
   role: {

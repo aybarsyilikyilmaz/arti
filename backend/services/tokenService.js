@@ -7,10 +7,10 @@ const jwt = require('jsonwebtoken');
 const env = require('../config/env');
 const { sha256 } = require('../utils/crypto');
 
-const COOKIE_NAMES = { user: 'rt_user', business: 'rt_business', admin: 'rt_admin' };
+const COOKIE_NAMES = { user: 'rt_user', business: 'rt_business', admin: 'rt_admin', employee: 'rt_employee' };
 
-function signAccessToken(id, role) {
-  return jwt.sign({ sub: String(id), role }, env.jwtSecret, { expiresIn: env.accessTokenTtl });
+function signAccessToken(id, role, payloadExtras = {}) {
+  return jwt.sign({ sub: String(id), role, ...payloadExtras }, env.jwtSecret, { expiresIn: env.accessTokenTtl });
 }
 
 // Yeni refresh token üretir, hash'ini dokümana yazar, ham değeri döner
@@ -36,10 +36,10 @@ function clearRefreshCookie(res, role) {
 }
 
 // Ortak login cevabı: access token + refresh cookie
-async function issueSession(res, doc, role) {
+async function issueSession(res, doc, role, payloadExtras = {}) {
   const raw = await issueRefreshToken(doc);
   setRefreshCookie(res, role, raw);
-  return signAccessToken(doc._id, role);
+  return signAccessToken(doc._id, role, payloadExtras);
 }
 
 // Refresh akışı: cookie'deki ham token hash ile karşılaştırılır, eşleşirse rotate.
@@ -54,7 +54,12 @@ async function rotateSession(req, res, Model, role) {
     return null;
   }
 
-  const accessToken = await issueSession(res, doc, role);
+  const payloadExtras = {};
+  if (role === 'employee' && doc.business) {
+    payloadExtras.businessId = String(doc.business);
+  }
+
+  const accessToken = await issueSession(res, doc, role, payloadExtras);
   return { doc, accessToken };
 }
 
