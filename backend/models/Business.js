@@ -101,7 +101,7 @@ const businessSchema = new mongoose.Schema({
   },
   boxContents: [{
     type: String,
-    enum: ['unlu', 'sicak', 'meze', 'manav', 'karisik', 'vegan', 'tatli', 'sandvic', 'sarkuteri', 'et', 'glutensiz', 'fastfood']
+    enum: ['unlu', 'sicak', 'meze', 'manav', 'karisik', 'vegan', 'tatli', 'sandvic', 'sarkuteri', 'et', 'glutensiz', 'fastfood', 'donut', 'ekler', 'sushi']
   }],
   pickupStart: { type: String, trim: true },
   pickupEnd: { type: String, trim: true },

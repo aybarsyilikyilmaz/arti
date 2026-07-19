@@ -30,7 +30,7 @@ const surpriseBoxSchema = new mongoose.Schema({
   },
   contents: [{
     type: String,
-    enum: ['unlu', 'sicak', 'meze', 'manav', 'karisik', 'vegan', 'tatli', 'sandvic', 'sarkuteri', 'et', 'glutensiz', 'fastfood']
+    enum: ['unlu', 'sicak', 'meze', 'manav', 'karisik', 'vegan', 'tatli', 'sandvic', 'sarkuteri', 'et', 'glutensiz', 'fastfood', 'donut', 'ekler', 'sushi']
   }],
   pickupStart: { type: String, match: /^([01]\d|2[0-3]):[0-5]\d$/ },
   pickupEnd: { type: String, match: /^([01]\d|2[0-3]):[0-5]\d$/ },
