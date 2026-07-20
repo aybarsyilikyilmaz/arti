@@ -39,9 +39,11 @@ exports.presignForBusiness = async (req, res, next) => {
 // Yalnızca STORAGE_PROVIDER=local iken kullanılan PUT ucu (S3 simülasyonu)
 exports.putLocal = async (req, res, next) => {
   try {
-    const contentType = String(req.query.ct || '');
+    const contentType = String(req.query.ct || '').toLowerCase();
+    const actualCt = (req.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
+    
     // S3 davranışıyla aynı: imzalanan Content-Type ile gönderilen eşleşmek zorunda
-    if ((req.headers['content-type'] || '') !== contentType) {
+    if (actualCt !== contentType) {
       return res.status(403).json({ status: 'fail', message: 'Content-Type imzalananla eşleşmiyor.' });
     }
     if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
