@@ -59,15 +59,23 @@ export default function StorefrontEditor() {
     if (me.coverUrl && me.coverUrl === me.detailUrl) setUseCoverAsDetail(true);
   }, [me, box]);
 
-  // Yerel önizleme URL'lerini temizle (bellek sızıntısı olmasın)
+  // Blob önizlemeleri YALNIZCA unmount'ta serbest bırakılır. Bağımlılığa bağlı
+  // cleanup, ikinci görsel seçilince hâlâ ekranda olan ilk blob'u revoke edip
+  // önizlemeyi kırıyordu (F5 sunucu URL'ini getirdiği için düzeliyordu).
+  const previewsRef = useRef({ coverPreview, logoPreview, detailPreview });
+  useEffect(() => { previewsRef.current = { coverPreview, logoPreview, detailPreview }; }, [coverPreview, logoPreview, detailPreview]);
   useEffect(() => () => {
-    [coverPreview, logoPreview, detailPreview].forEach((u) => u?.startsWith('blob:') && URL.revokeObjectURL(u));
-  }, [coverPreview, logoPreview, detailPreview]);
+    Object.values(previewsRef.current).forEach((u) => u?.startsWith('blob:') && URL.revokeObjectURL(u));
+  }, []);
 
   const pickImage = (setFile, setPreview) => (file, err) => {
     if (err) { push(err, 'error'); return; }
     setFile(file);
-    setPreview(URL.createObjectURL(file)); // canlı önizleme anında güncellenir
+    // Bu slotun önceki blob'unu değiştirirken serbest bırak (diğerlerine dokunma)
+    setPreview((prev) => {
+      if (typeof prev === 'string' && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    }); // canlı önizleme anında güncellenir
     setSaved(false);
   };
 
@@ -323,6 +331,7 @@ export default function StorefrontEditor() {
                 pickupStart={pickupStart}
                 pickupEnd={pickupEnd}
                 addressLine={addressLine}
+                mapsUrl={me?.mapsUrl || ''}
                 locationLine={locationLine}
                 district={me?.district || ''}
                 businessType={me?.businessType || ''}

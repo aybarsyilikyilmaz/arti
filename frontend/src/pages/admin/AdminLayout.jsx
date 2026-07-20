@@ -47,7 +47,7 @@ export default function AdminLayout() {
 
   return (
     <div className="font-admin relative min-h-screen bg-gray-50 text-gray-900 antialiased">
-      <div className="relative mx-auto flex max-w-7xl gap-6 px-4 py-6 sm:px-6">
+      <div className="relative mx-auto flex max-w-screen-2xl gap-6 px-4 py-6 sm:px-6">
         {/* Sidebar */}
         <motion.aside
           initial={{ opacity: 0, x: -16 }}

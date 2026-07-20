@@ -59,15 +59,23 @@ export default function BoxesTab({ business, reload, push }) {
 
   useEffect(() => { load(); }, [load]);
 
-  // Yerel blob önizlemelerini temizle (bellek sızıntısı olmasın)
+  // Blob önizlemeleri YALNIZCA unmount'ta serbest bırakılır. Bağımlılığa bağlı
+  // cleanup kullanılırsa, ikinci bir görsel seçmek hâlâ ekranda olan ilk blob'u
+  // revoke edip önizlemeyi kırıyordu (F5 sunucu URL'ini getirdiği için düzeliyordu).
+  const previewsRef = useRef({ coverPreview, logoPreview, detailPreview });
+  useEffect(() => { previewsRef.current = { coverPreview, logoPreview, detailPreview }; }, [coverPreview, logoPreview, detailPreview]);
   useEffect(() => () => {
-    [coverPreview, logoPreview, detailPreview].forEach((u) => u?.startsWith('blob:') && URL.revokeObjectURL(u));
-  }, [coverPreview, logoPreview, detailPreview]);
+    Object.values(previewsRef.current).forEach((u) => u?.startsWith('blob:') && URL.revokeObjectURL(u));
+  }, []);
 
   const pickImage = (setFile, setPreview) => (file, err) => {
     if (err) { push(err, 'error'); return; }
     setFile(file);
-    setPreview(URL.createObjectURL(file));
+    // Bu slotun önceki blob'unu değiştirirken serbest bırak (diğerlerine dokunma)
+    setPreview((prev) => {
+      if (typeof prev === 'string' && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
     setSavedVitrin(false);
   };
 
@@ -389,6 +397,7 @@ export default function BoxesTab({ business, reload, push }) {
           pickupStart={box?.pickupStart || business.pickupStart || null}
           pickupEnd={box?.pickupEnd || business.pickupEnd || null}
           addressLine={business.address || ''}
+          mapsUrl={business.mapsUrl || ''}
           locationLine={[business.district, business.city].filter(Boolean).join(', ')}
           district={business.district || ''}
           businessType={business.businessType || ''}

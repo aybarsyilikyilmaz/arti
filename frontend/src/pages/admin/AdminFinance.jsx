@@ -102,7 +102,7 @@ export default function AdminFinance() {
 
       {/* Hakediş tablosu */}
       <LightCard className="mt-5 overflow-hidden">
-        <div className="flex items-center gap-2 px-6 pt-5">
+        <div className="flex items-center gap-2 px-4 pt-5">
           <Landmark className="h-4 w-4 text-indigo-500" />
           <h2 className="text-sm font-bold text-gray-900">İşletme Hakedişleri</h2>
         </div>
@@ -111,29 +111,29 @@ export default function AdminFinance() {
             hint="İşletmeler satış yaptıkça hakedişleri burada birikir." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full whitespace-nowrap text-left text-sm">
               <thead>
                 <tr className="border-b border-gray-100 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
-                  <th className="px-6 py-3.5">İşletme</th>
-                  <th className="px-6 py-3.5">IBAN</th>
-                  <th className="px-6 py-3.5">Periyot</th>
-                  <th className="px-6 py-3.5">Fark %</th>
-                  <th className="px-6 py-3.5">Brüt Ciro</th>
-                  <th className="px-6 py-3.5">Platform Farkı</th>
-                  <th className="px-6 py-3.5">İşletme Hakedişi</th>
-                  <th className="px-6 py-3.5">Ödenen</th>
-                  <th className="px-6 py-3.5">Bekleyen</th>
-                  <th className="px-6 py-3.5 text-right">İşlem</th>
+                  <th className="px-4 py-3.5">İşletme</th>
+                  <th className="px-4 py-3.5">IBAN</th>
+                  <th className="px-4 py-3.5">Periyot</th>
+                  <th className="px-4 py-3.5">Fark %</th>
+                  <th className="px-4 py-3.5">Brüt Ciro</th>
+                  <th className="px-4 py-3.5">Platform Farkı</th>
+                  <th className="px-4 py-3.5">İşletme Hakedişi</th>
+                  <th className="px-4 py-3.5">Ödenen</th>
+                  <th className="px-4 py-3.5">Bekleyen</th>
+                  <th className="px-4 py-3.5 text-right">İşlem</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.businessId} className="border-b border-gray-50 transition-colors duration-200 hover:bg-gray-50/60">
-                    <td className="px-6 py-3.5">
+                    <td className="px-4 py-3.5">
                       <p className="font-semibold text-gray-900">{r.name}</p>
                       <p className="text-[11px] text-gray-400">{r.orders} teslim edilen sipariş</p>
                     </td>
-                    <td className="px-6 py-3.5">
+                    <td className="px-4 py-3.5">
                       {r.iban ? (
                         <>
                           <p className="font-mono text-xs tracking-wider text-gray-600">{r.iban}</p>
@@ -143,16 +143,16 @@ export default function AdminFinance() {
                         <span className="text-xs italic text-rose-400">IBAN tanımsız</span>
                       )}
                     </td>
-                    <td className="px-6 py-3.5 text-gray-500">{PERIOD_LABELS[r.payoutPeriod] || r.payoutPeriod}</td>
-                    <td className="px-6 py-3.5 font-semibold text-gray-700">%{r.commissionRate}</td>
-                    <td className="px-6 py-3.5 text-gray-500">{tl.format(r.gross)}</td>
-                    <td className="px-6 py-3.5 font-semibold text-emerald-700">{tl.format(r.platformEarning ?? r.commission)}</td>
-                    <td className="px-6 py-3.5 text-gray-600 font-medium">{tl.format(r.net)}</td>
-                    <td className="px-6 py-3.5 text-gray-500">{tl.format(r.paid)}</td>
-                    <td className={`px-6 py-3.5 font-bold ${r.pending > 0 ? 'text-amber-600' : 'text-gray-300'}`}>
+                    <td className="px-4 py-3.5 text-gray-500">{PERIOD_LABELS[r.payoutPeriod] || r.payoutPeriod}</td>
+                    <td className="px-4 py-3.5 font-semibold text-gray-700">%{r.commissionRate}</td>
+                    <td className="px-4 py-3.5 text-gray-500">{tl.format(r.gross)}</td>
+                    <td className="px-4 py-3.5 font-semibold text-emerald-700">{tl.format(r.platformEarning ?? r.commission)}</td>
+                    <td className="px-4 py-3.5 text-gray-600 font-medium">{tl.format(r.net)}</td>
+                    <td className="px-4 py-3.5 text-gray-500">{tl.format(r.paid)}</td>
+                    <td className={`px-4 py-3.5 font-bold ${r.pending > 0 ? 'text-amber-600' : 'text-gray-300'}`}>
                       {tl.format(r.pending)}
                     </td>
-                    <td className="px-6 py-3.5 text-right">
+                    <td className="px-4 py-3.5 text-right">
                       {r.pending > 0 && (
                         <SuccessButton onClick={() => pay(r)} disabled={busyId === String(r.businessId)} className="px-3 py-1.5">
                           {busyId === String(r.businessId)
@@ -171,36 +171,36 @@ export default function AdminFinance() {
 
       {/* Son ödemeler */}
       <LightCard className="mt-5 overflow-hidden">
-        <div className="flex items-center gap-2 px-6 pt-5">
+        <div className="flex items-center gap-2 px-4 pt-5">
           <Banknote className="h-4 w-4 text-emerald-500" />
           <h2 className="text-sm font-bold text-gray-900">Son Hakediş Ödemeleri</h2>
         </div>
         {recentPayouts.length === 0 ? (
-          <p className="px-6 pb-6 pt-3 text-sm text-gray-400">Henüz ödeme kaydı yok.</p>
+          <p className="px-4 pb-6 pt-3 text-sm text-gray-400">Henüz ödeme kaydı yok.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full whitespace-nowrap text-left text-sm">
               <thead>
                 <tr className="border-b border-gray-100 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
-                  <th className="px-6 py-3">İşletme</th>
-                  <th className="px-6 py-3">Dönem</th>
-                  <th className="px-6 py-3">Tutar</th>
-                  <th className="px-6 py-3">Durum</th>
-                  <th className="px-6 py-3">Dekont Ref.</th>
-                  <th className="px-6 py-3">Ödeme Tarihi</th>
+                  <th className="px-4 py-3">İşletme</th>
+                  <th className="px-4 py-3">Dönem</th>
+                  <th className="px-4 py-3">Tutar</th>
+                  <th className="px-4 py-3">Durum</th>
+                  <th className="px-4 py-3">Dekont Ref.</th>
+                  <th className="px-4 py-3">Ödeme Tarihi</th>
                 </tr>
               </thead>
               <tbody>
                 {recentPayouts.map((p) => (
                   <tr key={p._id} className="border-b border-gray-50 transition-colors duration-200 hover:bg-gray-50/60">
-                    <td className="px-6 py-3.5 font-semibold text-gray-900">
+                    <td className="px-4 py-3.5 font-semibold text-gray-900">
                       {p.business ? `${p.business.name}${p.business.branchName ? ` - ${p.business.branchName}` : ''}` : '—'}
                     </td>
-                    <td className="px-6 py-3.5 text-xs text-gray-400">{formatDate(p.periodStart)} – {formatDate(p.periodEnd)}</td>
-                    <td className="px-6 py-3.5 font-bold text-gray-900">{tl.format(p.netAmount)}</td>
-                    <td className="px-6 py-3.5"><PayoutBadge status={p.status} /></td>
-                    <td className="px-6 py-3.5 font-mono text-xs text-gray-500">{p.reference || '—'}</td>
-                    <td className="px-6 py-3.5 text-xs text-gray-400">{p.payoutDate ? formatDate(p.payoutDate) : '—'}</td>
+                    <td className="px-4 py-3.5 text-xs text-gray-400">{formatDate(p.periodStart)} – {formatDate(p.periodEnd)}</td>
+                    <td className="px-4 py-3.5 font-bold text-gray-900">{tl.format(p.netAmount)}</td>
+                    <td className="px-4 py-3.5"><PayoutBadge status={p.status} /></td>
+                    <td className="px-4 py-3.5 font-mono text-xs text-gray-500">{p.reference || '—'}</td>
+                    <td className="px-4 py-3.5 text-xs text-gray-400">{p.payoutDate ? formatDate(p.payoutDate) : '—'}</td>
                   </tr>
                 ))}
               </tbody>
