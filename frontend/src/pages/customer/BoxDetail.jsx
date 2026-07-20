@@ -146,11 +146,24 @@ export default function BoxDetail() {
                 <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4 text-gray-400" /> Konum</span>
                 {biz.mapsUrl && (
                   <a href={biz.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-emerald-600 hover:underline">
-                    Haritada Gör
+                    Yol Tarifi Al
                   </a>
                 )}
               </h3>
               <p className="mt-1.5 text-sm text-gray-600">{addressLine || 'Adres belirtilmemiş'}</p>
+              {addressLine && (
+                <div className="mt-3 overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
+                  <iframe
+                    title="İşletme Konumu"
+                    width="100%"
+                    height="180"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                    allowFullScreen
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(addressLine)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                  ></iframe>
+                </div>
+              )}
             </div>
           </section>
         </motion.div>
