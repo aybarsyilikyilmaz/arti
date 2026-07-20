@@ -20,8 +20,15 @@ const adminUserSchema = new mongoose.Schema({
     enum: ['superadmin', 'operator'],
     default: 'operator'
   },
-  refreshTokenHash: {
-    type: String,
+  sessions: {
+    type: [{
+      refreshTokenHash: { type: String, required: true },
+      deviceId: { type: String, required: true },
+      deviceInfo: { type: String },
+      ip: { type: String },
+      createdAt: { type: Date, default: Date.now },
+      lastActiveAt: { type: Date, default: Date.now }
+    }],
     select: false
   },
   createdAt: {
@@ -29,6 +36,9 @@ const adminUserSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+// Refresh akışı sessions.refreshTokenHash ile arar — index olmadan COLLSCAN
+adminUserSchema.index({ 'sessions.refreshTokenHash': 1 });
 
 adminUserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();

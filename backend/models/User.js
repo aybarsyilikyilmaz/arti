@@ -28,9 +28,16 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Business'
   }],
-  // Rotasyonlu refresh token — yalnızca hash tutulur, tek aktif oturum
-  refreshTokenHash: {
-    type: String,
+  // Aktif oturumlar listesi
+  sessions: {
+    type: [{
+      refreshTokenHash: { type: String, required: true },
+      deviceId: { type: String, required: true },
+      deviceInfo: { type: String },
+      ip: { type: String },
+      createdAt: { type: Date, default: Date.now },
+      lastActiveAt: { type: Date, default: Date.now }
+    }],
     select: false
   },
   kvkkConsentAt: {
@@ -46,6 +53,9 @@ const userSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+// Refresh akışı sessions.refreshTokenHash ile arar — index olmadan COLLSCAN
+userSchema.index({ 'sessions.refreshTokenHash': 1 });
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();

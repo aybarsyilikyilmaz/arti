@@ -1,5 +1,17 @@
 const Business = require('../models/Business');
 const tokenService = require('../services/tokenService');
+const { sha256 } = require('../utils/crypto');
+
+// Oturum/şifre uçları, kimliği doğrulanan gerçek principal üzerinde çalışmalı:
+//   • Çalışan (employeeId var)  → kendi Employee dokümanı + rt_employee cookie
+//   • İşletme sahibi            → Business dokümanı + rt_business cookie
+// Aksi halde bir çalışan, patronun (Business) oturumlarını görüp iptal edebilirdi.
+function resolvePrincipal(req) {
+  if (req.auth && req.auth.employeeId) {
+    return { Model: require('../models/Employee'), id: req.auth.employeeId, cookieName: 'rt_employee' };
+  }
+  return { Model: Business, id: req.auth.id, cookieName: 'rt_business' };
+}
 
 exports.register = async (req, res, next) => {
   try {
@@ -41,7 +53,7 @@ exports.register = async (req, res, next) => {
       kvkkConsentAt: new Date()
     });
 
-    const accessToken = await tokenService.issueSession(res, newBusiness, 'business');
+    const accessToken = await tokenService.issueSession(req, res, newBusiness, 'business');
 
     res.status(201).json({
       status: 'success',
@@ -72,7 +84,7 @@ exports.login = async (req, res, next) => {
       if (!(await business.correctPassword(password, business.password))) {
         return res.status(401).json({ status: 'fail', message: 'Hatalı e-posta veya şifre.' });
       }
-      const accessToken = await tokenService.issueSession(res, business, 'business');
+      const accessToken = await tokenService.issueSession(req, res, business, 'business');
       return res.status(200).json({
         status: 'success',
         accessToken,
@@ -89,7 +101,7 @@ exports.login = async (req, res, next) => {
       if (!employee.business) {
         return res.status(401).json({ status: 'fail', message: 'Bağlı olduğunuz işletme bulunamadı.' });
       }
-      const accessToken = await tokenService.issueSession(res, employee, 'employee', { businessId: String(employee.business._id) });
+      const accessToken = await tokenService.issueSession(req, res, employee, 'employee', { businessId: String(employee.business._id) });
       return res.status(200).json({
         status: 'success',
         accessToken,
@@ -172,7 +184,7 @@ exports.updateProfile = async (req, res, next) => {
     const Business = require('../models/Business');
     const ALLOWED = [
       'defaultPackageCount', 'defaultPrice', 'defaultOriginalPrice',
-      'pickupStart', 'pickupEnd', 'whatsappPhone', 'contactPhone', 'boxContents', 'description',
+      'pickupStart', 'pickupEnd', 'boxContents', 'description',
     ];
     const update = {};
     for (const key of ALLOWED) {
@@ -201,7 +213,7 @@ exports.updateProfileRequest = async (req, res, next) => {
 
     const ALLOWED = [
       'name', 'branchName', 'businessType', 'branchType', 'legalName', 'taxOffice', 'taxNumber',
-      'mapsUrl', 'address', 'contactName', 'contactRole', 'email', 'phone'
+      'mapsUrl', 'address', 'contactName', 'contactRole', 'email', 'phone', 'whatsappPhone', 'contactPhone'
     ];
     const updateReq = {};
     for (const key of ALLOWED) {
@@ -344,12 +356,127 @@ exports.switchBranch = async (req, res, next) => {
     if (req.auth.role === 'employee' || req.auth.employeeId) {
       const Employee = require('../models/Employee');
       const employee = await Employee.findById(req.auth.employeeId || req.auth.id);
-      accessToken = await tokenService.issueSession(res, employee, 'employee', { businessId: target._id.toString() });
+      accessToken = await tokenService.issueSession(req, res, employee, 'employee', { businessId: target._id.toString() });
     } else {
-      accessToken = await tokenService.issueSession(res, target, 'business');
+      accessToken = await tokenService.issueSession(req, res, target, 'business');
     }
 
     res.status(200).json({ status: 'success', accessToken, data: { business: target.toSafeJSON() } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getSessions = async (req, res, next) => {
+  try {
+    const { Model, id, cookieName } = resolvePrincipal(req);
+    const doc = await Model.findById(id).select('+sessions');
+    if (!doc) {
+      return res.status(404).json({ status: 'fail', message: 'Hesap bulunamadı.' });
+    }
+
+    const rawToken = req.cookies?.[cookieName];
+    const currentHashed = rawToken ? sha256(rawToken) : null;
+
+    const sessions = (doc.sessions || []).map(s => ({
+      deviceId: s.deviceId,
+      deviceInfo: s.deviceInfo,
+      ip: s.ip,
+      createdAt: s.createdAt,
+      lastActiveAt: s.lastActiveAt,
+      isCurrent: currentHashed ? s.refreshTokenHash === currentHashed : false
+    }));
+
+    res.status(200).json({ status: 'success', sessions });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.revokeSessionByDeviceId = async (req, res, next) => {
+  try {
+    const { Model, id } = resolvePrincipal(req);
+    const { deviceId } = req.params;
+
+    const doc = await Model.findById(id).select('+sessions');
+    if (!doc) {
+      return res.status(404).json({ status: 'fail', message: 'Hesap bulunamadı.' });
+    }
+
+    const sessionIndex = (doc.sessions || []).findIndex(s => s.deviceId === deviceId);
+    if (sessionIndex === -1) {
+      return res.status(404).json({ status: 'fail', message: 'Oturum bulunamadı.' });
+    }
+
+    doc.sessions.splice(sessionIndex, 1);
+    await doc.save({ validateBeforeSave: false });
+
+    res.status(200).json({ status: 'success', message: 'Oturum sonlandırıldı.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.revokeAllSessions = async (req, res, next) => {
+  try {
+    const { Model, id, cookieName } = resolvePrincipal(req);
+    const doc = await Model.findById(id).select('+sessions');
+    if (!doc) {
+      return res.status(404).json({ status: 'fail', message: 'Hesap bulunamadı.' });
+    }
+
+    const rawToken = req.cookies?.[cookieName];
+    const currentHashed = rawToken ? sha256(rawToken) : null;
+
+    // Yalnızca mevcut cihaz kalsın; cookie yoksa (ör. bozuk istek) hiçbir oturumu
+    // körlemesine silmeyip mevcut oturumu koruyamayacağımız için işlemi reddederiz.
+    if (!currentHashed) {
+      return res.status(400).json({ status: 'fail', message: 'Geçerli oturum bulunamadı.' });
+    }
+    doc.sessions = (doc.sessions || []).filter(s => s.refreshTokenHash === currentHashed);
+
+    await doc.save({ validateBeforeSave: false });
+
+    res.status(200).json({ status: 'success', message: 'Diğer tüm oturumlar sonlandırıldı.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.changePassword = async (req, res, next) => {
+  try {
+    const { Model, id, cookieName } = resolvePrincipal(req);
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ status: 'fail', message: 'Mevcut şifre ve yeni şifre gereklidir.' });
+    }
+
+    if (typeof newPassword !== 'string' || newPassword.length < 8) {
+      return res.status(400).json({ status: 'fail', message: 'Yeni şifre en az 8 karakter olmalıdır.' });
+    }
+
+    const doc = await Model.findById(id).select('+password +sessions');
+    if (!doc) {
+      return res.status(404).json({ status: 'fail', message: 'Hesap bulunamadı.' });
+    }
+
+    if (!(await doc.correctPassword(currentPassword, doc.password))) {
+      return res.status(401).json({ status: 'fail', message: 'Mevcut şifreniz hatalı.' });
+    }
+
+    doc.password = newPassword; // pre-save hook bcrypt ile hash'ler
+
+    // Şifre değiştiği için mevcut cihaz dışındaki tüm oturumları kapatıyoruz (güvenlik)
+    const rawToken = req.cookies?.[cookieName];
+    const currentHashed = rawToken ? sha256(rawToken) : null;
+    doc.sessions = currentHashed
+      ? (doc.sessions || []).filter(s => s.refreshTokenHash === currentHashed)
+      : [];
+
+    await doc.save();
+
+    res.status(200).json({ status: 'success', message: 'Şifreniz başarıyla değiştirildi.' });
   } catch (err) {
     next(err);
   }

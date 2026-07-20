@@ -70,8 +70,17 @@ const businessSchema = new mongoose.Schema({
     index: true
   },
   // Rotasyonlu refresh token hash'i (PLAN.md §5)
-  refreshTokenHash: { type: String, select: false },
-  // KVKK açık rıza zamanı (PLAN.md §7)
+  sessions: {
+    type: [{
+      refreshTokenHash: { type: String, required: true },
+      deviceId: { type: String, required: true },
+      deviceInfo: { type: String },
+      ip: { type: String },
+      createdAt: { type: Date, default: Date.now },
+      lastActiveAt: { type: Date, default: Date.now }
+    }],
+    select: false
+  },  // KVKK açık rıza zamanı (PLAN.md §7)
   kvkkConsentAt: { type: Date },
   // Yasal ve finansal bilgiler
   legalName: { type: String, trim: true },
@@ -141,6 +150,8 @@ const businessSchema = new mongoose.Schema({
 });
 
 businessSchema.index({ location: '2dsphere' });
+// Refresh akışı her ~15 dk sessions.refreshTokenHash ile arar — index olmadan COLLSCAN
+businessSchema.index({ 'sessions.refreshTokenHash': 1 });
 
 businessSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
@@ -161,7 +172,7 @@ businessSchema.methods.getTaxNumber = function() {
 businessSchema.methods.toSafeJSON = function() {
   const obj = this.toObject();
   delete obj.password;
-  delete obj.refreshTokenHash;
+  delete obj.sessions;
   delete obj.taxNumber;
   return obj;
 };

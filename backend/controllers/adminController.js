@@ -10,7 +10,7 @@ exports.login = async (req, res, next) => {
     if (!admin || !(await admin.correctPassword(password, admin.password))) {
       return res.status(401).json({ status: 'fail', message: 'Hatalı e-posta veya şifre.' });
     }
-    const accessToken = await tokenService.issueSession(res, admin, 'admin');
+    const accessToken = await tokenService.issueSession(req, res, admin, 'admin');
     res.status(200).json({ status: 'success', accessToken });
   } catch (err) {
     next(err);

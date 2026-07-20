@@ -11,7 +11,7 @@ exports.register = async (req, res, next) => {
     }
 
     const user = await User.create({ name, email, phone, password, kvkkConsentAt: new Date() });
-    const accessToken = await tokenService.issueSession(res, user, 'user');
+    const accessToken = await tokenService.issueSession(req, res, user, 'user');
 
     res.status(201).json({
       status: 'success',
@@ -39,7 +39,7 @@ exports.login = async (req, res, next) => {
       return res.status(403).json({ status: 'fail', message: 'Hesabınız askıya alınmıştır. Destek ekibiyle iletişime geçin.' });
     }
 
-    const accessToken = await tokenService.issueSession(res, user, 'user');
+    const accessToken = await tokenService.issueSession(req, res, user, 'user');
     res.status(200).json({
       status: 'success',
       accessToken,

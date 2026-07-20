@@ -44,6 +44,12 @@ router.get('/me', protect('business'), businessController.getMe);
 router.patch('/profile', protect('business'), requirePage('profil', 'ayarlar'), validateBody(profileSchema), businessController.updateProfile);
 router.post('/profile/update-request', protect('business'), requirePage('profil', 'ayarlar'), businessController.updateProfileRequest);
 
+// Oturumlar ve Şifre (Ayarlar)
+router.get('/sessions', protect('business'), requirePage('ayarlar'), businessController.getSessions);
+router.delete('/sessions/all', protect('business'), requirePage('ayarlar'), businessController.revokeAllSessions);
+router.delete('/sessions/:deviceId', protect('business'), requirePage('ayarlar'), businessController.revokeSessionByDeviceId);
+router.post('/change-password', protect('business'), requirePage('ayarlar'), businessController.changePassword);
+
 // Analiz & Raporlar
 router.get('/reports/summary', protect('business'), validateQuery(summaryQuerySchema), reportController.summary);
 

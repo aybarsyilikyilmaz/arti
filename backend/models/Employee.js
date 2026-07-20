@@ -34,13 +34,26 @@ const employeeSchema = new mongoose.Schema({
   allowedPages: [{
     type: String
   }],
-  // Refresh token hash'i
-  refreshTokenHash: { type: String, select: false },
+  // Aktif oturumlar listesi
+  sessions: {
+    type: [{
+      refreshTokenHash: { type: String, required: true },
+      deviceId: { type: String, required: true },
+      deviceInfo: { type: String },
+      ip: { type: String },
+      createdAt: { type: Date, default: Date.now },
+      lastActiveAt: { type: Date, default: Date.now }
+    }],
+    select: false
+  },
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
+
+// Refresh akışı sessions.refreshTokenHash ile arar — index olmadan COLLSCAN
+employeeSchema.index({ 'sessions.refreshTokenHash': 1 });
 
 employeeSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
@@ -56,7 +69,7 @@ employeeSchema.methods.correctPassword = async function(candidatePassword, userP
 employeeSchema.methods.toSafeJSON = function() {
   const obj = this.toObject();
   delete obj.password;
-  delete obj.refreshTokenHash;
+  delete obj.sessions;
   return obj;
 };
 

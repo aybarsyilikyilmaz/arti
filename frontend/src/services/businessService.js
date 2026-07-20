@@ -110,3 +110,16 @@ export const switchBranch = async (targetId) => {
   setSession('business', res.accessToken);
   return res;
 };
+
+// Oturumlar & Güvenlik
+export const getSessions = () =>
+  api.get('/business/sessions').then((r) => r.data.sessions);
+
+export const revokeSession = (deviceId) =>
+  api.delete(`/business/sessions/${deviceId}`).then((r) => r.data);
+
+export const revokeAllSessions = () =>
+  api.delete('/business/sessions/all').then((r) => r.data);
+
+export const changePassword = (payload) =>
+  api.post('/business/change-password', payload).then((r) => r.data);
