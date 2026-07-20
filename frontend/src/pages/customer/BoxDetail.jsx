@@ -5,9 +5,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, useNavigate, useOutletContext, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import {
-  ArrowLeft, Star, Clock, MapPin, Package, Loader2, Image as ImageIcon, ShieldCheck,
+  ArrowLeft, Star, Clock, MapPin, Package, Loader2, Image as ImageIcon, ShieldCheck, X,
 } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 import * as customerService from '../../services/customerService';
 import { apiErrorMessage } from '../../services/api';
 import { BOX_CONTENTS as CONTENTS } from '../../data/boxContents';
@@ -22,6 +22,7 @@ export default function BoxDetail() {
   const [loading, setLoading] = useState(!routeState?.box);
   const [error, setError] = useState('');
   const [ordering, setOrdering] = useState('');
+  const [showMapModal, setShowMapModal] = useState(false);
 
   useEffect(() => {
     // State'ten gelen kart özeti populate içermiyor olabilir → her zaman taze çek
@@ -152,11 +153,22 @@ export default function BoxDetail() {
               </h3>
               <p className="mt-1.5 text-sm text-gray-600">{addressLine || 'Adres belirtilmemiş'}</p>
               {addressLine && (
-                <div className="mt-3 overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
+                <div className="mt-3 relative h-[140px] w-full overflow-hidden rounded-xl border border-gray-200 bg-gray-50 group cursor-pointer">
+                  {/* Tıklamayı yakalamak için görünmez katman */}
+                  <div 
+                    className="absolute inset-0 z-10 flex items-center justify-center bg-gray-900/0 transition-all duration-300 group-hover:bg-gray-900/10"
+                    onClick={() => setShowMapModal(true)}
+                  >
+                    <div className="opacity-0 translate-y-2 transform rounded-full bg-white px-4 py-2 text-xs font-bold text-gray-900 shadow-lg transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
+                      Büyütmek için tıkla
+                    </div>
+                  </div>
+                  {/* Harita çerçevesi (pointer-events-none ile etkileşimi kapalı) */}
                   <iframe
                     title="İşletme Konumu"
                     width="100%"
-                    height="180"
+                    height="100%"
+                    className="pointer-events-none"
                     style={{ border: 0 }}
                     loading="lazy"
                     allowFullScreen
@@ -203,6 +215,50 @@ export default function BoxDetail() {
         </div>
       </div>
       <div className="h-20 lg:hidden" />
+
+      {/* ---------- Harita Modalı ---------- */}
+      <AnimatePresence>
+        {showMapModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/80 p-4 backdrop-blur-sm"
+            onClick={() => setShowMapModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative flex w-full max-w-4xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
+            >
+              <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+                <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+                  <MapPin className="h-5 w-5 text-emerald-600" /> Konum
+                </h3>
+                <button 
+                  onClick={() => setShowMapModal(false)} 
+                  className="rounded-full bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-900"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="h-[60vh] w-full sm:h-[75vh]">
+                <iframe
+                  title="İşletme Konumu Büyük"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  allowFullScreen
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(addressLine)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                ></iframe>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const SurpriseBox = require('../models/SurpriseBox');
 const { getMarkupRate } = require('./settingsController');
 const { todayIstanbul } = require('../utils/time');
@@ -107,9 +108,14 @@ exports.listNearby = async (req, res, next) => {
 // Müşteri: Tekil kutu detayını getir (İşletme detaylarıyla birlikte)
 exports.getBox = async (req, res, next) => {
   try {
+    // Geçersiz ObjectId'de findById CastError→500 fırlatır; önce doğrulayıp 400 dönüyoruz
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ status: 'fail', message: 'Geçersiz kutu kimliği.' });
+    }
+
     const box = await SurpriseBox.findById(req.params.id)
       .populate('business', 'name address mapsUrl logoUrl coverUrl detailUrl description');
-      
+
     if (!box) {
       return res.status(404).json({ status: 'fail', message: 'Kutu bulunamadı.' });
     }

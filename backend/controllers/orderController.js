@@ -21,6 +21,10 @@ exports.checkout = async (req, res, next) => {
       data: {
         orderId: result.order._id,
         amount: result.order.amount,
+        // Müşteri kendi siparişinin ödeme referansı — mock akışta ödeme bu ref ile
+        // tamamlanır. Üretimde mock rotası mount edilmez; sonuç imzalı webhook'tan
+        // geldiği için bu ref istemci tarafında işlevsizdir (yalnızca izleme amaçlı).
+        paymentRef: result.order.paymentRef,
         paymentPageUrl: result.paymentPageUrl,
         expiresInMinutes: require('../config/env').reservationTtlMin,
       },
