@@ -142,7 +142,14 @@ export default function BoxDetail() {
               <p className="mt-1 text-xs text-gray-400">Kendi çantanı getirmeyi unutma!</p>
             </div>
             <div className="rounded-2xl border border-gray-100 bg-white p-4">
-              <h3 className="flex items-center gap-1.5 text-sm font-bold text-gray-900"><MapPin className="h-4 w-4 text-gray-400" /> Konum</h3>
+              <h3 className="flex items-center justify-between text-sm font-bold text-gray-900">
+                <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4 text-gray-400" /> Konum</span>
+                {biz.mapsUrl && (
+                  <a href={biz.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-emerald-600 hover:underline">
+                    Haritada Gör
+                  </a>
+                )}
+              </h3>
               <p className="mt-1.5 text-sm text-gray-600">{addressLine || 'Adres belirtilmemiş'}</p>
             </div>
           </section>
