@@ -17,20 +17,21 @@ export default function BusinessProfile() {
 
   useEffect(() => {
     if (!me) return;
+    const src = me.pendingUpdates ? { ...me, ...me.pendingUpdates } : me;
     setForm({
-      name: me.name || '',
-      businessType: me.businessType || '',
-      branchType: me.branchType || '',
-      legalName: me.legalName || '',
-      taxOffice: me.taxOffice || '',
-      taxNumber: me.taxNumber || '',
-      mapsUrl: me.mapsUrl || '',
-      address: me.address || '',
-      contactName: me.contactName || '',
-      contactRole: me.contactRole || '',
-      branchName: me.branchName || '',
-      phone: me.phone || '',
-      email: me.email || '',
+      name: src.name || '',
+      businessType: src.businessType || '',
+      branchType: src.branchType || '',
+      legalName: src.legalName || '',
+      taxOffice: src.taxOffice || '',
+      taxNumber: src.taxNumber || '',
+      mapsUrl: src.mapsUrl || '',
+      address: src.address || '',
+      contactName: src.contactName || '',
+      contactRole: src.contactRole || '',
+      branchName: src.branchName || '',
+      phone: src.phone || '',
+      email: src.email || '',
     });
   }, [me]);
 
