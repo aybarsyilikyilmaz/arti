@@ -2,7 +2,7 @@ const { z } = require('zod');
 
 // Yalnızca görsel türlerine izin verilir; boyut sınırı PUT tarafında (5mb)
 const presignSchema = z.object({
-  kind: z.enum(['logo', 'cover', 'box'], { message: 'Görsel türü logo, cover veya box olmalı.' }),
+  kind: z.enum(['logo', 'cover', 'box', 'detail'], { message: 'Görsel türü logo, cover, box veya detail olmalı.' }),
   contentType: z.enum(['image/jpeg', 'image/png', 'image/webp'], {
     message: 'Yalnızca JPEG, PNG veya WebP yüklenebilir.',
   }),
