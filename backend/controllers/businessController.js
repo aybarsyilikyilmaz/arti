@@ -16,7 +16,7 @@ function resolvePrincipal(req) {
 exports.register = async (req, res, next) => {
   try {
     const {
-      name, branchName, email, phone, password, address, coordinates, businessType,
+      name, branchName, email, phone, password, address, city, district, coordinates, businessType,
       branchType, legalName, taxOffice, taxNumber, mersisNumber,
       mapsUrl,
       contactName, contactRole, contactPhone,
@@ -35,6 +35,8 @@ exports.register = async (req, res, next) => {
       phone,
       password,
       address,
+      city,
+      district,
       location: coordinates ? { type: 'Point', coordinates } : undefined,
       businessType,
       branchType,

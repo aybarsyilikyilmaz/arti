@@ -82,14 +82,17 @@ exports.getTodayBox = async (req, res, next) => {
 // Müşteri: bugünün stoklu kutuları — koordinat verilirse yakınlık sıralı
 exports.listNearby = async (req, res, next) => {
   try {
-    const { lng, lat, radiusKm } = req.query;
+    const lng = parseFloat(req.query.lng);
+    const lat = parseFloat(req.query.lat);
+    const radiusKm = parseFloat(req.query.radiusKm);
     const filter = { date: todayIstanbul(), remaining: { $gt: 0 } };
 
-    if (lng !== undefined && lat !== undefined) {
+    if (Number.isFinite(lng) && Number.isFinite(lat)) {
+      const meters = (Number.isFinite(radiusKm) ? radiusKm : 8) * 1000;
       filter.location = {
         $near: {
           $geometry: { type: 'Point', coordinates: [lng, lat] },
-          $maxDistance: radiusKm * 1000,
+          $maxDistance: meters,
         },
       };
     }
@@ -97,13 +100,37 @@ exports.listNearby = async (req, res, next) => {
     const boxes = await SurpriseBox.find(filter)
       .limit(50)
       .select('business businessName price originalPrice contents pickupStart pickupEnd remaining location')
-      .populate('business', 'name logoUrl coverUrl');
+      .populate('business', 'name logoUrl coverUrl businessType address city district');
 
-    res.status(200).json({ status: 'success', results: boxes.length, data: { boxes } });
+    const withRatings = await attachRatings(boxes);
+    res.status(200).json({ status: 'success', results: withRatings.length, data: { boxes: withRatings } });
   } catch (err) {
     next(err);
   }
 };
+
+// Kutulara işletmenin gerçek yorum ortalamasını + adedini ekler (denormalize yok,
+// keşfet başına tek aggregate). rating null ise "henüz puan yok" demektir.
+async function attachRatings(boxes) {
+  const Review = require('../models/Review');
+  const bizIds = boxes.map((b) => b.business?._id).filter(Boolean);
+  const rows = bizIds.length
+    ? await Review.aggregate([
+      { $match: { business: { $in: bizIds } } },
+      { $group: { _id: '$business', avg: { $avg: '$rating' }, count: { $sum: 1 } } },
+    ])
+    : [];
+  const map = new Map(rows.map((r) => [String(r._id), { rating: Math.round(r.avg * 10) / 10, ratingCount: r.count }]));
+  return boxes.map((b) => {
+    const obj = b.toObject();
+    if (obj.business) {
+      const r = map.get(String(obj.business._id));
+      obj.business.rating = r?.rating ?? null;
+      obj.business.ratingCount = r?.ratingCount ?? 0;
+    }
+    return obj;
+  });
+}
 
 // Müşteri: Tekil kutu detayını getir (İşletme detaylarıyla birlikte)
 exports.getBox = async (req, res, next) => {
@@ -114,13 +141,14 @@ exports.getBox = async (req, res, next) => {
     }
 
     const box = await SurpriseBox.findById(req.params.id)
-      .populate('business', 'name address mapsUrl logoUrl coverUrl detailUrl description');
+      .populate('business', 'name address city district mapsUrl logoUrl coverUrl detailUrl description businessType');
 
     if (!box) {
       return res.status(404).json({ status: 'fail', message: 'Kutu bulunamadı.' });
     }
-    
-    res.status(200).json({ status: 'success', data: { box } });
+
+    const [withRating] = await attachRatings([box]);
+    res.status(200).json({ status: 'success', data: { box: withRating } });
   } catch (err) {
     next(err);
   }

@@ -23,6 +23,8 @@ const registerSchema = z
     taxNumber: z.string().trim().regex(/^\d{10,11}$/, 'Vergi numarası 10 (VKN) veya 11 (TCKN) haneli olmalı.').optional(),
     mersisNumber: optionalTrimmed(30),
     mapsUrl: optionalTrimmed(500),
+    city: optionalTrimmed(80),
+    district: optionalTrimmed(80),
     address: z.string({ message: 'Adres zorunludur.' }).trim()
       .min(5, 'Adres en az 5 karakter olmalı.')
       .max(500, 'Adres en fazla 500 karakter olabilir.'),

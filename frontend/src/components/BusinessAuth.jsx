@@ -144,6 +144,8 @@ export default function BusinessAuth() {
     taxNumber: '',
     mersisNumber: '',
     mapsUrl: '',
+    city: '',
+    district: '',
     address: '',
     phone: '',
     contactName: '',
@@ -193,7 +195,8 @@ export default function BusinessAuth() {
     if (s === 1) {
       if (!formData.legalName.trim()) return 'Resmi şirket unvanını girin.';
       if (!formData.taxOffice.trim() || !formData.taxNumber.trim()) return 'Vergi dairesi ve vergi numarası zorunludur.';
-      if (!formData.address.trim()) return 'Adres bilgisi zorunludur.';
+      if (!formData.city) return 'İl seçin.';
+      if (!formData.district) return 'İlçe seçin.';
       if (!formData.address.trim()) return 'Tam adresi girin.';
       if (!formData.phone.trim()) return 'İşletme telefonunu girin.';
       if (!formData.contactName.trim()) return 'Yetkili adı-soyadını girin.';
@@ -538,6 +541,31 @@ export default function BusinessAuth() {
                           <div className="grid grid-cols-1 gap-4">
                             <Field label="Google Maps Konum Linki" hint="(Uygulamada gösterilecek konum)">
                               <input name="mapsUrl" type="url" placeholder="https://maps.app.goo.gl/..." value={formData.mapsUrl} onChange={handleChange} className={inputCls} />
+                            </Field>
+                          </div>
+                          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Field label="İl">
+                              <select
+                                name="city"
+                                value={formData.city}
+                                onChange={(e) => { set('city', e.target.value); set('district', ''); }}
+                                className={inputCls}
+                              >
+                                <option value="">İl seçin</option>
+                                {Object.keys(turkeyZones).map((il) => <option key={il} value={il}>{il}</option>)}
+                              </select>
+                            </Field>
+                            <Field label="İlçe">
+                              <select
+                                name="district"
+                                value={formData.district}
+                                onChange={handleChange}
+                                disabled={!formData.city}
+                                className={`${inputCls} disabled:opacity-50 disabled:cursor-not-allowed`}
+                              >
+                                <option value="">{formData.city ? 'İlçe seçin' : 'Önce il seçin'}</option>
+                                {(turkeyZones[formData.city] || []).map((ilce) => <option key={ilce} value={ilce}>{ilce}</option>)}
+                              </select>
                             </Field>
                           </div>
                           <div className="mt-4">

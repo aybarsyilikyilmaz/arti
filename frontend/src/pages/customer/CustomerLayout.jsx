@@ -7,9 +7,14 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Search, ShoppingBag, Heart, User, LogOut, Menu, X, Leaf } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import BrandLogo from '../../components/BrandLogo';
+import LocationPicker from '../../components/customer/LocationPicker';
 
-// Basit konum seçenekleri (Faz 2'de keşfet filtresini besler)
-const LOCATIONS = ['Kadıköy, İstanbul', 'Beşiktaş, İstanbul', 'Şişli, İstanbul', 'Çankaya, Ankara', 'Konak, İzmir'];
+// Varsayılan konum: Kadıköy merkez, 5 km. localStorage'da kalıcı tutulur.
+const DEFAULT_GEO = { lat: 40.9825, lng: 29.0264, radiusKm: 5, label: 'Kadıköy, İstanbul' };
+function loadGeo() {
+  try { return JSON.parse(localStorage.getItem('arti_geo')) || DEFAULT_GEO; } catch { return DEFAULT_GEO; }
+}
 
 export default function CustomerLayout() {
   const navigate = useNavigate();
@@ -17,8 +22,15 @@ export default function CustomerLayout() {
   const { authed, restoring, logout } = useAuth('user');
 
   const [query, setQuery] = useState('');
-  const [loc, setLoc] = useState(LOCATIONS[0]);
+  const [geo, setGeo] = useState(loadGeo);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const confirmGeo = (g) => {
+    setGeo(g);
+    try { localStorage.setItem('arti_geo', JSON.stringify(g)); } catch { /* yoksay */ }
+    setPickerOpen(false);
+  };
 
   const onSearch = (e) => {
     e.preventDefault();
@@ -51,25 +63,23 @@ export default function CustomerLayout() {
       <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/95 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
           {/* Logo */}
-          <Link to="/kesfet" className="flex shrink-0 items-center gap-1.5 text-emerald-700">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-sm">
-              <Leaf className="h-5 w-5" />
-            </span>
+          <Link to="/kesfet" className="flex shrink-0 items-center gap-1.5 text-emerald-700" aria-label="Keşfet">
+            <BrandLogo className="h-8 w-auto" />
             <span className="font-logo text-2xl font-semibold italic tracking-wide">Artı</span>
           </Link>
 
           {/* Konum + arama (masaüstü) */}
           <div className="hidden flex-1 items-center gap-3 md:flex">
-            <label className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600">
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 transition hover:border-emerald-300 hover:bg-emerald-50/50"
+              title="Konumu değiştir"
+            >
               <MapPin className="h-4 w-4 shrink-0 text-emerald-600" />
-              <select
-                value={loc}
-                onChange={(e) => setLoc(e.target.value)}
-                className="max-w-[10rem] cursor-pointer bg-transparent outline-none"
-              >
-                {LOCATIONS.map((l) => <option key={l} value={l}>{l}</option>)}
-              </select>
-            </label>
+              <span className="max-w-[11rem] truncate font-medium">{geo.label}</span>
+              <span className="shrink-0 text-xs text-gray-400">· {geo.radiusKm} km</span>
+            </button>
             <form onSubmit={onSearch} className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-300" />
               <input
@@ -123,8 +133,17 @@ export default function CustomerLayout() {
           </button>
         </div>
 
-        {/* Mobil arama şeridi */}
-        <div className="border-t border-gray-100 px-4 py-2.5 md:hidden">
+        {/* Mobil konum + arama şeridi */}
+        <div className="space-y-2 border-t border-gray-100 px-4 py-2.5 md:hidden">
+          <button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            className="flex w-full items-center gap-1.5 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700"
+          >
+            <MapPin className="h-4 w-4 shrink-0 text-emerald-600" />
+            <span className="truncate font-medium">{geo.label}</span>
+            <span className="ml-auto shrink-0 text-xs text-gray-400">{geo.radiusKm} km</span>
+          </button>
           <form onSubmit={onSearch} className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-300" />
             <input
@@ -169,8 +188,10 @@ export default function CustomerLayout() {
 
       {/* ---------- İçerik ---------- */}
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
-        <Outlet context={{ authed, location: loc, query }} />
+        <Outlet context={{ authed, geo, query }} />
       </main>
+
+      <LocationPicker open={pickerOpen} onClose={() => setPickerOpen(false)} initial={geo} onConfirm={confirmGeo} />
 
       {/* ---------- Footer ---------- */}
       <footer className="border-t border-gray-100 bg-white">

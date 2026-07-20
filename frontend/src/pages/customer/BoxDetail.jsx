@@ -5,6 +5,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, useNavigate, useOutletContext, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import {
   ArrowLeft, Star, Clock, MapPin, Package, Loader2, Image as ImageIcon, ShieldCheck, X,
 } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
@@ -105,11 +106,15 @@ export default function BoxDetail() {
             </span>
             <div className="min-w-0">
               <h1 className="text-2xl font-bold tracking-tight text-gray-900">{biz.name || box.businessName}</h1>
-              <p className="mt-0.5 flex items-center gap-1.5 text-sm text-gray-500">
-                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                <span className="font-bold text-amber-500">4.4</span>
-                <span>(120+ değerlendirme)</span>
-              </p>
+              {typeof biz.rating === 'number' && biz.rating > 0 ? (
+                <p className="mt-0.5 flex items-center gap-1.5 text-sm text-gray-500">
+                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  <span className="font-bold text-amber-500">{biz.rating.toFixed(1)}</span>
+                  <span>({biz.ratingCount} değerlendirme)</span>
+                </p>
+              ) : (
+                <p className="mt-0.5 text-sm text-gray-400">Henüz değerlendirme yok</p>
+              )}
             </div>
           </div>
 

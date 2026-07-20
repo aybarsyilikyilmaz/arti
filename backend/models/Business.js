@@ -34,6 +34,9 @@ const businessSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Adres zorunludur.']
   },
+  // Yapısal konum — keşfette il/ilçe filtresi bunları kullanır (adres serbest metin)
+  city: { type: String, trim: true, index: true },
+  district: { type: String, trim: true, index: true },
   // GeoJSON konum — yalnızca koordinat verildiğinde oluşur;
   // default'lar kaldırıldı çünkü koordinatsız {type:'Point'} 2dsphere indeksini patlatır
   location: {

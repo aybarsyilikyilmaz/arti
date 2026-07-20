@@ -1,11 +1,16 @@
-// Keşfet/favoriler kutu kartı — responsive grid içinde kullanılır.
-// Tüm veriler backend'den gelir (fiyat/stok denormalize). Kart tıklanınca
-// kutu detayına gider; kalp favoriyi açar/kapar (girişsizse login'e yönlendirir).
+// Keşfet/favoriler kutu kartı — responsive grid içinde kullanılır (Yemeksepeti tarzı).
+// Tüm veriler backend'den gelir (fiyat/stok/puan denormalize/aggregate). Kart
+// tıklanınca kutu detayına gider; kalp favoriyi açar/kapar (girişsizse login'e).
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Star, Heart, Clock, MapPin, Image as ImageIcon } from 'lucide-react';
 import { BOX_CONTENTS as CONTENTS } from '../../data/boxContents';
+
+const TYPE_LABELS = {
+  firin: 'Fırın', kafe: 'Kafe', restoran: 'Restoran', pastane: 'Pastane',
+  market: 'Market', manav: 'Manav', kasap: 'Kasap', otel: 'Otel', diger: 'Diğer',
+};
 
 export default function BoxCard({ box, index = 0, isFavorite = false, onToggleFavorite }) {
   const navigate = useNavigate();
@@ -15,8 +20,15 @@ export default function BoxCard({ box, index = 0, isFavorite = false, onToggleFa
   const soldOut = box.remaining <= 0;
   const scarce = box.remaining > 0 && box.remaining <= 3;
 
-  const go = () => navigate(`/kesfet/kutu/${box._id}`, { state: { box } });
+  // İndirim yüzdesi (sürpriz kutunun cazibesi buradan gelir)
+  const discount = box.originalPrice && box.price && box.originalPrice > box.price
+    ? Math.round((1 - box.price / box.originalPrice) * 100)
+    : 0;
 
+  const hasRating = typeof biz.rating === 'number' && biz.rating > 0;
+  const typeLabel = TYPE_LABELS[biz.businessType] || '';
+
+  const go = () => navigate(`/kesfet/kutu/${box._id}`, { state: { box } });
   const toggleFav = (e) => {
     e.stopPropagation();
     onToggleFavorite?.(biz._id || biz.id);
@@ -31,7 +43,7 @@ export default function BoxCard({ box, index = 0, isFavorite = false, onToggleFa
       className="group flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-gray-200/70"
     >
       {/* Kapak */}
-      <div className="relative h-36 w-full overflow-hidden bg-gray-100">
+      <div className="relative h-40 w-full overflow-hidden bg-gray-100">
         {biz.coverUrl ? (
           <img src={biz.coverUrl} alt={name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
         ) : (
@@ -39,17 +51,33 @@ export default function BoxCard({ box, index = 0, isFavorite = false, onToggleFa
             <ImageIcon className="h-8 w-8" />
           </div>
         )}
+
+        {/* Sol üst: indirim rozeti */}
+        {discount > 0 && !soldOut && (
+          <span className="absolute left-2.5 top-2.5 rounded-lg bg-emerald-600 px-2 py-1 text-[11px] font-black text-white shadow-md shadow-emerald-900/20">
+            %{discount} indirim
+          </span>
+        )}
+
+        {/* Sağ üst: gerçek puan (yorum varsa) */}
+        {hasRating && (
+          <span className="absolute right-2.5 top-2.5 flex items-center gap-0.5 rounded-full bg-white/95 px-2 py-1 text-[11px] font-bold text-gray-800 shadow">
+            <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {biz.rating.toFixed(1)}
+            {biz.ratingCount ? <span className="font-medium text-gray-400">({biz.ratingCount})</span> : null}
+          </span>
+        )}
+
+        {/* Sol alt: aciliyet */}
         {scarce && (
-          <span className="absolute left-2.5 top-2.5 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold text-rose-600 shadow">
+          <span className="absolute bottom-2.5 left-2.5 rounded-full bg-rose-600 px-2.5 py-1 text-[10px] font-bold text-white shadow">
             Son {box.remaining} kutu
           </span>
         )}
+
         {soldOut && (
           <span className="absolute inset-0 flex items-center justify-center bg-gray-900/50 text-sm font-bold text-white">Tükendi</span>
         )}
-        <span className="absolute right-2.5 top-2.5 flex items-center gap-0.5 rounded-full bg-white/95 px-2 py-1 text-[10px] font-bold text-gray-800 shadow">
-          <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" /> 4.4
-        </span>
+
         {onToggleFavorite && (
           <button
             onClick={toggleFav}
@@ -76,23 +104,27 @@ export default function BoxCard({ box, index = 0, isFavorite = false, onToggleFa
           <p className="truncate text-base font-bold text-gray-900">{name}</p>
         </div>
 
-        <p className="mt-1 text-xs text-gray-400">
+        {/* Meta: tür · ilçe · teslim saati */}
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400">
+          {typeLabel && <span className="font-semibold text-gray-500">{typeLabel}</span>}
+          {typeLabel && biz.district && <span className="text-gray-300">·</span>}
+          {biz.district && (
+            <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{biz.district}</span>
+          )}
+          <span className="text-gray-300">·</span>
           <span className="inline-flex items-center gap-1">
             <Clock className="h-3 w-3" />
             {box.pickupStart && box.pickupEnd ? `${box.pickupStart}-${box.pickupEnd}` : 'Saat belirtilmemiş'}
           </span>
-          {biz.district && (
-            <span className="ml-2 inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{biz.district}</span>
-          )}
         </p>
 
         {contents.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
             {contents.map((key) => {
               const c = CONTENTS.find((x) => x.key === key);
               if (!c) return null;
               return (
-                <span key={key} className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-100">
+                <span key={key} className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-600">
                   {c.emoji} {c.short}
                 </span>
               );
