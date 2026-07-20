@@ -12,13 +12,11 @@ export default function BranchSwitcher({ me }) {
   const dropdownRef = useRef(null);
   const { toasts, push } = useToasts();
 
-  const isChainOrBranch = me?.branchType === 'zincir' || me?.parentBusinessId || (me?.role === 'employee' && me?.allowedBranches?.length > 1);
-
   useEffect(() => {
-    if (isChainOrBranch && isOpen && !branchesData) {
+    if (isOpen && !branchesData) {
       loadBranches();
     }
-  }, [isOpen, isChainOrBranch]);
+  }, [isOpen, branchesData]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -52,7 +50,7 @@ export default function BranchSwitcher({ me }) {
     }
   };
 
-  if (!isChainOrBranch && !me) return null;
+  if (!me) return null;
 
   return (
     <>

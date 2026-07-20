@@ -73,8 +73,6 @@ const profileSchema = z
     defaultOriginalPrice: z.number().min(1, 'En az 1 TL.').max(100000).optional(),
     pickupStart: z.string().regex(HHMM, 'Saat SS:DD formatında olmalı.').optional(),
     pickupEnd: z.string().regex(HHMM, 'Saat SS:DD formatında olmalı.').optional(),
-    whatsappPhone: z.string().trim().max(20).optional(),
-    contactPhone: z.string().trim().max(20).optional(),
     boxContents: z.array(z.enum(['unlu', 'sicak', 'meze', 'manav', 'karisik', 'vegan', 'tatli', 'sandvic', 'sarkuteri', 'et', 'glutensiz', 'fastfood', 'donut', 'ekler', 'sushi']))
       .max(2, 'En fazla 2 kutu içeriği seçilebilir.').optional(),
     description: z.string().trim().max(500, 'Açıklama en fazla 500 karakter olabilir.').optional(),

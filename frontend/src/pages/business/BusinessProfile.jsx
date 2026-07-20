@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Building2, FileDigit, MapPin, User, Loader2, Info } from 'lucide-react';
+import { Building2, FileDigit, MapPin, User, Loader2, Info, MessageCircle } from 'lucide-react';
 import * as businessService from '../../services/businessService';
 import { apiErrorMessage } from '../../services/api';
 import { LightCard, SuccessButton, Spinner, useToasts, ToastStack } from '../../components/admin/AdminUI';
@@ -32,6 +32,8 @@ export default function BusinessProfile() {
       branchName: src.branchName || '',
       phone: src.phone || '',
       email: src.email || '',
+      whatsappPhone: src.whatsappPhone || '',
+      contactPhone: src.contactPhone || '',
     });
   }, [me]);
 
@@ -168,7 +170,7 @@ export default function BusinessProfile() {
           </div>
         </LightCard>
 
-        {/* Yetkili & İletişim */}
+        {/* Yetkili Bilgileri */}
         <LightCard className="p-6">
           <h2 className="mb-5 flex items-center gap-2 text-sm font-bold text-gray-900">
             <User className="h-4 w-4 text-rose-500" /> Yetkili Bilgileri
@@ -197,14 +199,34 @@ export default function BusinessProfile() {
                 </select>
               </label>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <label className="block">
-                <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-gray-400">İşletme Telefonu</span>
-                <input value={form.phone} disabled={isPending}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  className={inputCls} placeholder="05XX XXX XX XX" />
-              </label>
-            </div>
+          </div>
+        </LightCard>
+
+        {/* İletişim Bilgileri */}
+        <LightCard className="p-6">
+          <h2 className="mb-5 flex items-center gap-2 text-sm font-bold text-gray-900">
+            <MessageCircle className="h-4 w-4 text-emerald-500" /> İletişim Bilgileri
+          </h2>
+          <p className="mb-5 text-xs text-gray-400">Sistem bildirimleri ve müşteri iletişimi için kullanılacak numaralar.</p>
+          <div className="flex flex-col gap-4">
+            <label className="block">
+              <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-gray-400">İşletme Telefonu</span>
+              <input value={form.phone} disabled={isPending}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className={inputCls} placeholder="05XX XXX XX XX" />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-gray-400">WhatsApp (Bot)</span>
+              <input value={form.whatsappPhone} disabled={isPending}
+                onChange={(e) => setForm({ ...form, whatsappPhone: e.target.value })}
+                className={inputCls} placeholder="05XX XXX XX XX" />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-gray-400">Sabit Telefon</span>
+              <input value={form.contactPhone} disabled={isPending}
+                onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
+                className={inputCls} placeholder="0212 XXX XX XX" />
+            </label>
           </div>
         </LightCard>
 

@@ -179,20 +179,6 @@ export default function BusinessLayout() {
                 </motion.span>
               )}
             </button>
-
-            {/* Profil */}
-            <div className="flex items-center gap-2.5 rounded-xl border border-gray-200 bg-white px-3 py-2 shadow-sm">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600">
-                {me?.logoUrl ? (
-                  <img src={me.logoUrl} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <User className="h-4 w-4 text-white" />
-                )}
-              </div>
-              <div className="hidden min-w-0 sm:block">
-                <p className="truncate text-xs font-semibold text-gray-700">{me?.name || 'İşletme'}</p>
-              </div>
-            </div>
           </div>
 
           {/* Onay bekliyor / askıda uyarısı */}

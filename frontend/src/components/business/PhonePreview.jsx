@@ -6,11 +6,11 @@
 // profil verisinden hesaplanıp buraya verilir. onCoverClick verilirse kapak
 // alanı tıklanabilir olur (vitrin editöründe fotoğraf yükleme); verilmezse
 // salt-okunur önizlemedir (admin).
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ImagePlus, Clock, Star, Image as ImageIcon,
-  MapPin, Heart, Map, UserRound, Leaf,
+  MapPin, Heart, Map, UserRound, Leaf, X,
 } from 'lucide-react';
 import { typeLabel } from '../admin/AdminUI';
 import { BOX_CONTENTS as CONTENTS } from '../../data/boxContents';
@@ -79,6 +79,8 @@ export default function PhonePreview({
   remaining = null,
   onCoverClick,            // opsiyonel — vitrin editöründe kapak yükleme
 }) {
+  const [showMapModal, setShowMapModal] = useState(false);
+
   return (
     <div className="relative mx-auto w-[320px] rounded-[3rem] border-[12px] border-gray-900 bg-gray-900 shadow-2xl">
       <div className="absolute left-1/2 top-2.5 z-20 h-[26px] w-28 -translate-x-1/2 rounded-full bg-gray-900" />
@@ -283,11 +285,36 @@ export default function PhonePreview({
                 </p>
 
                 {/* Konum — dinamik adres */}
-                <h4 className="mt-5 text-sm font-bold text-gray-900">📍 Konum</h4>
+                <h4 className="mt-5 flex items-center justify-between text-sm font-bold text-gray-900">
+                  <span>📍 Konum</span>
+                  <span className="text-xs font-medium text-emerald-600">Yol Tarifi Al</span>
+                </h4>
                 <p className="mt-1 text-sm font-bold text-gray-800">{name || '—'}</p>
                 <p className={`text-sm ${addressLine ? 'text-gray-500' : 'italic text-gray-300'}`}>
                   {addressLine || 'Adres bilgisi kayıttan gelir'}
                 </p>
+                {addressLine && (
+                  <div className="mt-3 relative h-[140px] w-full overflow-hidden rounded-xl border border-gray-200 bg-gray-50 group cursor-pointer">
+                    <div 
+                      className="absolute inset-0 z-10 flex items-center justify-center bg-gray-900/0 transition-all duration-300 group-hover:bg-gray-900/10"
+                      onClick={() => setShowMapModal(true)}
+                    >
+                      <div className="opacity-0 translate-y-2 transform rounded-full bg-white px-3 py-1.5 text-[10px] font-bold text-gray-900 shadow-lg transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
+                        Büyütmek için tıkla
+                      </div>
+                    </div>
+                    <iframe
+                      title="İşletme Konumu"
+                      width="100%"
+                      height="100%"
+                      className="pointer-events-none"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                      allowFullScreen
+                      src={`https://maps.google.com/maps?q=${encodeURIComponent(addressLine)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                    ></iframe>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -305,6 +332,41 @@ export default function PhonePreview({
             </div>
           </motion.div>
         )}
+        </AnimatePresence>
+
+        {/* ---------- Harita Modalı (Telefon İçi) ---------- */}
+        <AnimatePresence>
+          {showMapModal && (
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              className="absolute inset-0 z-50 flex flex-col bg-white"
+            >
+              <div className="flex items-center justify-between border-b border-gray-100 px-4 pb-3 pt-10">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-gray-900">
+                  <MapPin className="h-4 w-4 text-emerald-600" /> Konum
+                </h3>
+                <button 
+                  onClick={() => setShowMapModal(false)} 
+                  className="rounded-full bg-gray-100 p-2 text-gray-500 hover:bg-gray-200"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex-1">
+                <iframe
+                  title="İşletme Konumu Büyük"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  allowFullScreen
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(addressLine)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                ></iframe>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </div>
