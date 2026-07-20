@@ -95,9 +95,26 @@ exports.listNearby = async (req, res, next) => {
 
     const boxes = await SurpriseBox.find(filter)
       .limit(50)
-      .select('business businessName price originalPrice contents pickupStart pickupEnd remaining location');
+      .select('business businessName price originalPrice contents pickupStart pickupEnd remaining location')
+      .populate('business', 'name logoUrl coverUrl');
 
     res.status(200).json({ status: 'success', results: boxes.length, data: { boxes } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Müşteri: Tekil kutu detayını getir (İşletme detaylarıyla birlikte)
+exports.getBox = async (req, res, next) => {
+  try {
+    const box = await SurpriseBox.findById(req.params.id)
+      .populate('business', 'name address mapsUrl logoUrl coverUrl detailUrl description');
+      
+    if (!box) {
+      return res.status(404).json({ status: 'fail', message: 'Kutu bulunamadı.' });
+    }
+    
+    res.status(200).json({ status: 'success', data: { box } });
   } catch (err) {
     next(err);
   }
