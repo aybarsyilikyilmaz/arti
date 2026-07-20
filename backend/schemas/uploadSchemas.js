@@ -10,9 +10,12 @@ const presignSchema = z.object({
 
 const setImagesSchema = z
   .object({
-    logoUrl: z.string().url('Geçerli bir URL girin.').max(500).optional(),
-    coverUrl: z.string().url('Geçerli bir URL girin.').max(500).optional(),
+    logoUrl: z.string().url('Geçersiz URL.').max(500).optional(),
+    coverUrl: z.string().url('Geçersiz URL.').max(500).optional(),
+    detailUrl: z.string().url('Geçersiz URL.').max(500).optional(),
   })
-  .refine((d) => d.logoUrl || d.coverUrl, { message: 'En az bir görsel URL\'i gönderin.' });
+  .refine((data) => data.logoUrl || data.coverUrl || data.detailUrl, {
+    message: 'En az bir görsel URL\'si (logoUrl, coverUrl veya detailUrl) gönderilmelidir.',
+  });
 
 module.exports = { presignSchema, setImagesSchema };

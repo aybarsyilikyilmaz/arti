@@ -32,8 +32,11 @@ export default function StorefrontEditor() {
   const [contents, setContents] = useState([]);
   const [coverFile, setCoverFile] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
+  const [detailFile, setDetailFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState('');
   const [logoPreview, setLogoPreview] = useState('');
+  const [detailPreview, setDetailPreview] = useState('');
+  const [useCoverAsDetail, setUseCoverAsDetail] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -52,12 +55,14 @@ export default function StorefrontEditor() {
     setContents(box?.contents?.length ? box.contents : (me.boxContents || []));
     setCoverPreview((p) => p || me.coverUrl || '');
     setLogoPreview((p) => p || me.logoUrl || '');
+    setDetailPreview((p) => p || me.detailUrl || '');
+    if (me.coverUrl && me.coverUrl === me.detailUrl) setUseCoverAsDetail(true);
   }, [me, box]);
 
   // Yerel önizleme URL'lerini temizle (bellek sızıntısı olmasın)
   useEffect(() => () => {
-    [coverPreview, logoPreview].forEach((u) => u?.startsWith('blob:') && URL.revokeObjectURL(u));
-  }, [coverPreview, logoPreview]);
+    [coverPreview, logoPreview, detailPreview].forEach((u) => u?.startsWith('blob:') && URL.revokeObjectURL(u));
+  }, [coverPreview, logoPreview, detailPreview]);
 
   const pickImage = (setFile, setPreview) => (file, err) => {
     if (err) { push(err, 'error'); return; }
@@ -92,10 +97,18 @@ export default function StorefrontEditor() {
       const images = {};
       if (coverFile) images.coverUrl = await businessService.uploadImage('cover', coverFile);
       if (logoFile) images.logoUrl = await businessService.uploadImage('logo', logoFile);
+      
+      if (useCoverAsDetail) {
+        images.detailUrl = images.coverUrl || me.coverUrl;
+      } else if (detailFile) {
+        images.detailUrl = await businessService.uploadImage('detail', detailFile);
+      }
+      
       if (Object.keys(images).length > 0) await businessService.setImages(images);
       await businessService.updateProfile({ description, boxContents: contents });
       setCoverFile(null);
       setLogoFile(null);
+      setDetailFile(null);
       setSaved(true);
       reloadMe();
       push('Vitrin güncellendi — müşteriler artık bu görünümü görüyor. ✨');
@@ -146,8 +159,22 @@ export default function StorefrontEditor() {
           {/* ---------- SOL: Veri girişi ---------- */}
           <div className="space-y-7">
             <section>
-              <h2 className="mb-1 text-sm font-bold text-gray-900">Kapak Fotoğrafı</h2>
-              <p className="mb-3 text-xs text-gray-400">Müşteri ekranının en üstünde tam genişlikte görünür. Önerilen: yatay, 1200×400.</p>
+              <div className="mb-1 flex items-baseline justify-between">
+                <h2 className="text-sm font-bold text-gray-900">Kapak Fotoğrafı</h2>
+                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-medium text-emerald-600 hover:text-emerald-700">
+                  <input
+                    type="checkbox"
+                    checked={useCoverAsDetail}
+                    onChange={(e) => {
+                      setUseCoverAsDetail(e.target.checked);
+                      if (e.target.checked) setSaved(false);
+                    }}
+                    className="h-3.5 w-3.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  Detay sayfasına da bunu koy
+                </label>
+              </div>
+              <p className="mb-3 text-xs text-gray-400">Keşfet listesi ekranının üstünde tam genişlikte görünür. Önerilen: yatay, 1200×400.</p>
               <DropZone
                 label="Kapak fotoğrafını sürükle ya da tıkla"
                 hint="JPEG · PNG · WebP"
@@ -169,6 +196,19 @@ export default function StorefrontEditor() {
                 />
               </div>
             </section>
+
+            {!useCoverAsDetail && (
+              <section>
+                <h2 className="mb-1 text-sm font-bold text-gray-900">Detay Sayfası Fotoğrafı</h2>
+                <p className="mb-3 text-xs text-gray-400">Mağazanın kendi sayfasının en üstünde görünür. Önerilen: yatay, 1200×400.</p>
+                <DropZone
+                  label="Detay fotoğrafını sürükle ya da tıkla"
+                  hint="JPEG · PNG · WebP"
+                  preview={detailPreview}
+                  onFile={pickImage(setDetailFile, setDetailPreview)}
+                />
+              </section>
+            )}
 
             <section>
               <div className="mb-1 flex items-baseline justify-between">
@@ -275,6 +315,7 @@ export default function StorefrontEditor() {
                 name={name}
                 logoUrl={logoPreview}
                 coverUrl={coverPreview}
+                detailUrl={useCoverAsDetail ? coverPreview : detailPreview}
                 description={description}
                 contents={contents}
                 price={price}

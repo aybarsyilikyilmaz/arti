@@ -65,6 +65,7 @@ export default function PhonePreview({
   name = '',
   logoUrl = '',
   coverUrl = '',
+  detailUrl = '',
   description = '',
   contents = [],
   price = null,
@@ -219,7 +220,7 @@ export default function PhonePreview({
               </div>
 
               {/* Kapak — tam genişlik */}
-              <CoverArea coverUrl={coverUrl} onCoverClick={onCoverClick} heightCls="h-40" />
+              <CoverArea coverUrl={detailUrl || coverUrl} onCoverClick={onCoverClick} heightCls="h-40" />
 
               {/* İçerik */}
               <div className="px-4 pt-4">

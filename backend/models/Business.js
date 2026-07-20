@@ -114,6 +114,7 @@ const businessSchema = new mongoose.Schema({
   // Görseller — depolama adaptöründen dönen publicUrl (lokal disk veya S3/CDN)
   logoUrl: { type: String, trim: true, maxlength: 500 },
   coverUrl: { type: String, trim: true, maxlength: 500 },
+  detailUrl: { type: String, trim: true, maxlength: 500 },
   // Vitrin: müşteri uygulamasında görünen tanıtım metni
   description: { type: String, trim: true, maxlength: 500 },
   // Operasyonel / sürpriz kutu ayarları

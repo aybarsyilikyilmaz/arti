@@ -63,15 +63,16 @@ exports.putLocal = async (req, res, next) => {
 };
 
 // Ortak görsel yazma — keyfi dış URL profil görseli yapılamaz, yalnızca kendi depomuz
-const applyImages = async (businessId, { logoUrl, coverUrl }, res) => {
-  for (const url of [logoUrl, coverUrl].filter(Boolean)) {
+const applyImages = async (businessId, { logoUrl, coverUrl, detailUrl }, res) => {
+  for (const url of [logoUrl, coverUrl, detailUrl].filter(Boolean)) {
     if (!storage.ownsPublicUrl(url)) {
       return res.status(400).json({ status: 'fail', message: 'Görsel URL\'i depolama alanımıza ait değil.' });
     }
   }
   const update = {};
-  if (logoUrl) update.logoUrl = logoUrl;
-  if (coverUrl) update.coverUrl = coverUrl;
+  if (logoUrl !== undefined) update.logoUrl = logoUrl;
+  if (coverUrl !== undefined) update.coverUrl = coverUrl;
+  if (detailUrl !== undefined) update.detailUrl = detailUrl;
   const business = await Business.findByIdAndUpdate(businessId, update, { new: true });
   if (!business) return res.status(404).json({ status: 'fail', message: 'İşletme bulunamadı.' });
   return res.status(200).json({ status: 'success', data: { business: business.toSafeJSON() } });
