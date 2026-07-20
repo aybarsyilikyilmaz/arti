@@ -71,3 +71,6 @@ jobs:
 
       - name: Güvenlik regresyon testi (RBAC / çift-hash / regex enjeksiyon)
         run: node scripts/e2e-security.js
+
+      - name: Müşteri sipariş akışı duman testi (kayıt→keşfet→ödeme→QR + güvenlik)
+        run: node scripts/e2e-customer.js

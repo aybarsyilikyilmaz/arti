@@ -41,3 +41,7 @@ antigravity/
 # Local helper scripts
 *.py
 
+
+# Geçici debug script'leri
+scratch.js
+**/scratch.js

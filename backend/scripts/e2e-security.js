@@ -45,6 +45,11 @@ async function main() {
     business: biz._id, allowedBranches: [biz._id], name: 'Kısıtlı Çalışan',
     email: `e2e-sec-emp-${tag}@arti.dev`, password: 'sifre-1234', allowedPages: ['kutu'], // finans/profil YOK
   });
+  // 'ayarlar' yetkili çalışan — oturum/şifre yalıtımı testleri için
+  await Employee.create({
+    business: biz._id, allowedBranches: [biz._id], name: 'Ayarlar Çalışanı',
+    email: `e2e-sec-emp2-${tag}@arti.dev`, password: 'emp-sifre-1234', allowedPages: ['ayarlar'],
+  });
   const adminEmail = `e2e-sec-admin-${tag}@arti.dev`;
   await AdminUser.create({ email: adminEmail, password: 'admin-sifre-123', role: 'superadmin' });
 
@@ -80,6 +85,32 @@ async function main() {
 
   // --- Regex enjeksiyon: özel karakterli arama sunucuyu kırmaz ---
   check('Regex-özel arama güvenli (200)', (await api(`/api/v1/admin/users?q=${encodeURIComponent('(a+)+$[')}`, { token: adminTok })).status === 200);
+
+  // --- Oturumlar & şifre: çoklu oturum + çalışan/işletme yalıtımı ---
+  // Çoklu oturum: sahip ikinci kez giriş yaparsa ilk oturum SİLİNMEMELİ (her giriş
+  // diğer cihazları eziyordu — atomik $push ile çözüldü).
+  await api('/api/v1/business/login', { method: 'POST', body: { email: `e2e-sec-biz-${tag}@arti.dev`, password: 'sifre-1234' } });
+  const ownerSessions = (await Business.findById(biz._id).select('+sessions')).sessions || [];
+  check('Çoklu oturum korunuyor (2. giriş 1.\'yi silmedi)', ownerSessions.length >= 2, `count=${ownerSessions.length}`);
+
+  // Yetki: 'ayarlar' olmayan çalışan oturum/şifre uçlarına giremez (403)
+  check('kutu-çalışanı oturumları göremez (403)', (await api('/api/v1/business/sessions', { token: empTok })).status === 403);
+  check('kutu-çalışanı şifre değiştiremez (403)', (await api('/api/v1/business/change-password', { method: 'POST', token: empTok, body: { currentPassword: 'sifre-1234', newPassword: 'yeni-sifre-1234' } })).status === 403);
+
+  // Yalıtım: 'ayarlar' yetkili çalışan YALNIZCA kendi oturumunu görür (sahibinkini değil)
+  const emp2Tok = (await api('/api/v1/business/login', { method: 'POST', body: { email: `e2e-sec-emp2-${tag}@arti.dev`, password: 'emp-sifre-1234' } })).data?.accessToken;
+  const emp2Sessions = await api('/api/v1/business/sessions', { token: emp2Tok });
+  check('Çalışan yalnızca KENDİ oturumunu görüyor (sahibin 2 değil, 1)',
+    emp2Sessions.status === 200 && (emp2Sessions.data?.sessions || []).length === 1,
+    `count=${(emp2Sessions.data?.sessions || []).length}`);
+
+  // Yalıtım: çalışan, sahibin şifresiyle değiştiremez; işlem KENDİ hesabında yürür
+  check('Çalışan, sahibin şifresiyle değiştiremez (401)',
+    (await api('/api/v1/business/change-password', { method: 'POST', token: emp2Tok, body: { currentPassword: 'sifre-1234', newPassword: 'baska-sifre-123' } })).status === 401);
+  check('Çalışan kendi şifresini değiştirebilir (200)',
+    (await api('/api/v1/business/change-password', { method: 'POST', token: emp2Tok, body: { currentPassword: 'emp-sifre-1234', newPassword: 'emp-yeni-1234' } })).status === 200);
+  const ownerStillLogin = await api('/api/v1/business/login', { method: 'POST', body: { email: `e2e-sec-biz-${tag}@arti.dev`, password: 'sifre-1234' } });
+  check('Sahip şifresi çalışan tarafından DEĞİŞTİRİLMEDİ (200)', ownerStillLogin.status === 200);
 
   // --- Temizlik ---
   const bizIds = (await Business.find({ email: new RegExp(`e2e-sec-(biz|yeni)-${tag}`) }).select('_id')).map((b) => b._id);
