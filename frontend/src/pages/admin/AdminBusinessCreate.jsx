@@ -39,8 +39,11 @@ export default function AdminBusinessCreate() {
   const [form, setForm] = useState(INITIAL_FORM);
   const [logoFile, setLogoFile] = useState(null);
   const [coverFile, setCoverFile] = useState(null);
+  const [detailFile, setDetailFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
   const [coverPreview, setCoverPreview] = useState('');
+  const [detailPreview, setDetailPreview] = useState('');
+  const [useCoverAsDetail, setUseCoverAsDetail] = useState(false);
 
   const handleToggleContent = (key) => {
     setForm(prev => {
@@ -67,10 +70,21 @@ export default function AdminBusinessCreate() {
       const created = await adminService.createBusiness(payload);
       const businessId = created.business._id;
 
-      if (logoFile || coverFile) {
+      if (logoFile || coverFile || detailFile) {
         push('İşletme eklendi, fotoğraflar yükleniyor...', 'info');
-        if (logoFile) await adminService.uploadBusinessImage(businessId, 'logo', logoFile);
-        if (coverFile) await adminService.uploadBusinessImage(businessId, 'cover', coverFile);
+        const images = {};
+        if (logoFile) images.logoUrl = await adminService.uploadBusinessImage(businessId, 'logo', logoFile);
+        if (coverFile) images.coverUrl = await adminService.uploadBusinessImage(businessId, 'cover', coverFile);
+        
+        if (useCoverAsDetail) {
+          if (images.coverUrl) images.detailUrl = images.coverUrl;
+        } else if (detailFile) {
+          images.detailUrl = await adminService.uploadBusinessImage(businessId, 'detail', detailFile);
+        }
+        
+        if (Object.keys(images).length > 0) {
+          await adminService.setBusinessImages(businessId, images);
+        }
       }
 
       push('İşletme başarıyla oluşturuldu ve onaylandı!', 'success');
@@ -224,7 +238,18 @@ export default function AdminBusinessCreate() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700">Kapak Fotoğrafı</label>
+                    <div className="mb-2 flex items-baseline justify-between">
+                      <label className="block text-sm font-medium text-gray-700">Kapak Fotoğrafı</label>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs font-medium text-emerald-600 hover:text-emerald-700">
+                        <input
+                          type="checkbox"
+                          checked={useCoverAsDetail}
+                          onChange={(e) => setUseCoverAsDetail(e.target.checked)}
+                          className="h-3.5 w-3.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                        />
+                        Detay sayfasına da bunu koy
+                      </label>
+                    </div>
                     <DropZone
                       file={coverFile}
                       preview={coverPreview}
@@ -238,6 +263,22 @@ export default function AdminBusinessCreate() {
                     />
                   </div>
                 </div>
+                {!useCoverAsDetail && (
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700">Detay Sayfası Fotoğrafı</label>
+                    <DropZone
+                      file={detailFile}
+                      preview={detailPreview}
+                      onDrop={(f, err) => {
+                        if (err) return push(err, 'error');
+                        setDetailFile(f);
+                        setDetailPreview(URL.createObjectURL(f));
+                      }}
+                      label="Detay Yükle"
+                      className="h-32"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">Hakkımızda (Açıklama)</label>
                   <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="h-20 w-full resize-none rounded-lg border border-gray-200 px-3 py-2 outline-none focus:border-emerald-500" placeholder="İşletmenin kısa tanıtımı..." />
@@ -319,6 +360,7 @@ export default function AdminBusinessCreate() {
                 name={form.name}
                 logoUrl={logoPreview}
                 coverUrl={coverPreview}
+                detailUrl={useCoverAsDetail ? coverPreview : detailPreview}
                 description={form.description}
                 contents={form.boxContents}
                 pickupStart={form.pickupStart}

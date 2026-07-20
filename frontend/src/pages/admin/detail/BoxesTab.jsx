@@ -29,8 +29,11 @@ export default function BoxesTab({ business, reload, push }) {
   const [contents, setContents] = useState([]);
   const [coverFile, setCoverFile] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
+  const [detailFile, setDetailFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState(business.coverUrl || '');
   const [logoPreview, setLogoPreview] = useState(business.logoUrl || '');
+  const [detailPreview, setDetailPreview] = useState(business.detailUrl || '');
+  const [useCoverAsDetail, setUseCoverAsDetail] = useState(Boolean(business.coverUrl && business.coverUrl === business.detailUrl));
   const [savingVitrin, setSavingVitrin] = useState(false);
   const [savedVitrin, setSavedVitrin] = useState(false);
 
@@ -58,8 +61,8 @@ export default function BoxesTab({ business, reload, push }) {
 
   // Yerel blob önizlemelerini temizle (bellek sızıntısı olmasın)
   useEffect(() => () => {
-    [coverPreview, logoPreview].forEach((u) => u?.startsWith('blob:') && URL.revokeObjectURL(u));
-  }, [coverPreview, logoPreview]);
+    [coverPreview, logoPreview, detailPreview].forEach((u) => u?.startsWith('blob:') && URL.revokeObjectURL(u));
+  }, [coverPreview, logoPreview, detailPreview]);
 
   const pickImage = (setFile, setPreview) => (file, err) => {
     if (err) { push(err, 'error'); return; }
@@ -94,10 +97,18 @@ export default function BoxesTab({ business, reload, push }) {
       const images = {};
       if (coverFile) images.coverUrl = await adminService.uploadBusinessImage(business._id, 'cover', coverFile);
       if (logoFile) images.logoUrl = await adminService.uploadBusinessImage(business._id, 'logo', logoFile);
+      
+      if (useCoverAsDetail) {
+        images.detailUrl = images.coverUrl || business.coverUrl;
+      } else if (detailFile) {
+        images.detailUrl = await adminService.uploadBusinessImage(business._id, 'detail', detailFile);
+      }
+
       if (Object.keys(images).length > 0) await adminService.setBusinessImages(business._id, images);
       await adminService.updateBusinessProfile(business._id, { description, boxContents: contents });
       setCoverFile(null);
       setLogoFile(null);
+      setDetailFile(null);
       setSavedVitrin(true);
       push('Vitrin güncellendi — müşteriler artık bu görünümü görüyor. ✨');
       reload();
@@ -191,7 +202,21 @@ export default function BoxesTab({ business, reload, push }) {
 
           <div className="space-y-6">
             <div>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Kapak Fotoğrafı</p>
+              <div className="mb-2 flex items-baseline justify-between">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Kapak Fotoğrafı</p>
+                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-medium text-emerald-600 hover:text-emerald-700">
+                  <input
+                    type="checkbox"
+                    checked={useCoverAsDetail}
+                    onChange={(e) => {
+                      setUseCoverAsDetail(e.target.checked);
+                      if (e.target.checked) setSavedVitrin(false);
+                    }}
+                    className="h-3.5 w-3.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  Detay sayfasına da bunu koy
+                </label>
+              </div>
               <DropZone
                 label="Kapak fotoğrafını sürükle ya da tıkla"
                 hint="JPEG · PNG · WebP — yatay önerilir"
@@ -212,6 +237,18 @@ export default function BoxesTab({ business, reload, push }) {
                 />
               </div>
             </div>
+
+            {!useCoverAsDetail && (
+              <div>
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Detay Sayfası Fotoğrafı</p>
+                <DropZone
+                  label="Detay fotoğrafını sürükle ya da tıkla"
+                  hint="JPEG · PNG · WebP — yatay önerilir"
+                  preview={detailPreview}
+                  onFile={pickImage(setDetailFile, setDetailPreview)}
+                />
+              </div>
+            )}
 
             <div>
               <div className="mb-2 flex items-baseline justify-between">
@@ -344,6 +381,7 @@ export default function BoxesTab({ business, reload, push }) {
           name={business.name}
           logoUrl={logoPreview}
           coverUrl={coverPreview}
+          detailUrl={useCoverAsDetail ? coverPreview : detailPreview}
           description={description}
           contents={contents}
           price={previewPrice}
