@@ -160,6 +160,15 @@ export default function BusinessProfile() {
               <input value={form.mapsUrl} disabled={isPending}
                 onChange={(e) => setForm({ ...form, mapsUrl: e.target.value })}
                 className={inputCls} placeholder="https://maps.app.goo.gl/..." />
+              <div className="mt-2 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                <p className="text-[11px] leading-relaxed text-amber-800">
+                  Bu link, müşterinin gördüğü <strong>“Yol Tarifi Al”</strong> butonunu çalıştırır.
+                  Yanlış ya da boş olursa müşteri seni haritada bulamaz veya <strong>yanlış adrese yönlendirilir</strong> —
+                  siparişini teslim alamaz. Lütfen işletmenin <strong>tam</strong> Google Maps konumunu yapıştır:
+                  Google Maps’te işletmeni aç → <strong>Paylaş → Bağlantıyı kopyala</strong>.
+                </p>
+              </div>
             </label>
             <label className="block">
               <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-gray-400">Tam Adres</span>

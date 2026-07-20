@@ -73,6 +73,7 @@ export default function PhonePreview({
   pickupStart = null,
   pickupEnd = null,
   addressLine = '',
+  mapsUrl = '',            // doluysa "Yol Tarifi Al" görünür (gerçek müşteri sayfasıyla aynı)
   locationLine = '',
   district = '',
   businessType = '',
@@ -134,8 +135,8 @@ export default function PhonePreview({
                       Hızla tükeniyor
                     </span>
                   )}
-                  <span className="absolute right-2.5 top-2.5 flex items-center gap-0.5 rounded-full bg-white px-2 py-1 text-[10px] font-bold text-gray-800 shadow">
-                    <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" /> 4.4
+                  <span className="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700 shadow ring-1 ring-inset ring-emerald-100/50">
+                    <Star className="h-2.5 w-2.5 fill-emerald-500 text-emerald-500" /> Yeni
                   </span>
                 </div>
                 <div className="p-3.5">
@@ -244,10 +245,11 @@ export default function PhonePreview({
                   {contents.includes('vegan') ? 'Vejetaryen sürpriz kutu' : 'Sürpriz kutu'}
                   {businessType ? ` · ${typeLabel(businessType)}` : ''}
                 </p>
-                <p className="mt-1 flex items-center gap-1 text-sm">
-                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                  <span className="font-bold text-amber-500">4.4</span>
-                  <span className="text-gray-400">(120+ değerlendirme)</span>
+                <p className="mt-1 flex items-center gap-1.5 text-sm">
+                  <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700 ring-1 ring-inset ring-emerald-100/50">
+                    <Star className="h-3 w-3 fill-emerald-500 text-emerald-500" /> Yeni
+                  </span>
+                  <span className="text-gray-400 text-xs">Henüz değerlendirme yok</span>
                 </p>
 
                 {/* Kutuda ne olabilir? */}
@@ -287,7 +289,7 @@ export default function PhonePreview({
                 {/* Konum — dinamik adres */}
                 <h4 className="mt-5 flex items-center justify-between text-sm font-bold text-gray-900">
                   <span>📍 Konum</span>
-                  <span className="text-xs font-medium text-emerald-600">Yol Tarifi Al</span>
+                  {mapsUrl && <span className="text-xs font-medium text-emerald-600">Yol Tarifi Al</span>}
                 </h4>
                 <p className="mt-1 text-sm font-bold text-gray-800">{name || '—'}</p>
                 <p className={`text-sm ${addressLine ? 'text-gray-500' : 'italic text-gray-300'}`}>
