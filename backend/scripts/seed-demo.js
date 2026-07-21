@@ -59,9 +59,15 @@ async function main() {
   // GeoJSON konum yardımcısı: [boylam, enlem]
   const pt = (lng, lat) => ({ type: 'Point', coordinates: [lng, lat] });
 
+  // SABİT _id'ler: reseed işletme kimliğini değiştirmesin ki elle açılan talep/
+  // favori gibi ilişkili kayıtlar öksüz kalmasın (a171 = "artı" hatırlatıcı).
+  const oid = (s) => new mongoose.Types.ObjectId(s);
+  const SIMIT_ID = oid('a17100000000000000000001');
+
   // --- Ana panel demo işletmesi: Simit Sarayı Moda (fotoğraflı) ---
   const simitLoc = pt(29.0264, 40.9825); // Moda
   const cevapsiz = await Business.create({
+    _id: SIMIT_ID,
     ...ortak, name: 'Simit Sarayı Moda', email: `simit@demo.arti.dev`, businessType: 'firin', status: 'APPROVED',
     whatsappPhone: '05001112233', defaultPackageCount: 5, defaultPrice: 150, defaultOriginalPrice: 400,
     iban: 'TR33 0006 1005 1978 6457 8413 26', ibanOwner: 'Simit Sarayı Gıda A.Ş.', payoutPeriod: 'weekly',
@@ -83,27 +89,27 @@ async function main() {
   // --- Diğer keşfet işletmeleri: her biri fotoğraflı + bugünün kutusuyla ---
   // folder = uploads/business/<id> (silinen kayıtların hayatta kalan görselleri)
   const SHOPS = [
-    { name: 'Mis Pastane', email: 'mis@demo.arti.dev', type: 'kafe', folder: '6a5d56e5809c4707359a9c77',
+    { name: 'Mis Pastane', email: 'mis@demo.arti.dev', type: 'kafe', folder: '6a5d56e5809c4707359a9c77', id: 'a17100000000000000000002',
       cover: 'cover-618f42ab3b2fb909.jpg', logo: 'logo-1a9abac2c2fad1a0.jpg', coords: [29.0290, 40.9860],
       base: 120, orig: 350, contents: ['tatli', 'unlu'], stock: 8, remaining: 5, start: '19:00', end: '21:00',
       desc: 'Ev yapımı pasta, kurabiye ve tatlılar. Vitrinde kalanlar sürpriz kutuda.' },
-    { name: 'Yeşil Vadi Manav', email: 'yesilvadi@demo.arti.dev', type: 'manav', folder: '6a5d56e5809c4707359a9c78',
+    { name: 'Yeşil Vadi Manav', email: 'yesilvadi@demo.arti.dev', type: 'manav', folder: '6a5d56e5809c4707359a9c78', id: 'a17100000000000000000003',
       cover: 'cover-d302e36ea7f2c0aa.jpg', logo: 'logo-0961072a7b2a05a9.jpg', coords: [29.0230, 40.9900],
       base: 120, orig: 350, contents: ['manav', 'vegan'], stock: 6, remaining: 4, start: '20:00', end: '20:30',
       desc: 'Günlük taze meyve ve sebze. İsraf olmasın diye gün sonu kutusu.' },
-    { name: 'Baklavacı Hüsnü Usta', email: 'baklava@demo.arti.dev', type: 'firin', folder: '6a5d56e6809c4707359a9c7d',
+    { name: 'Baklavacı Hüsnü Usta', email: 'baklava@demo.arti.dev', type: 'firin', folder: '6a5d56e6809c4707359a9c7d', id: 'a17100000000000000000004',
       cover: 'cover-3d757a79bf47a84f.jpg', logo: 'logo-07e9cfa3f49aeb8d.png', whatsapp: '05004445566', coords: [29.0310, 40.9840],
       base: 200, orig: 700, contents: ['tatli', 'unlu'], stock: 8, remaining: 6, start: '20:30', end: '21:00',
       desc: 'Antep fıstıklı baklava ve şöbiyet. Günün sonunda taze kalanlar yarı fiyatına.' },
-    { name: 'Bizim Manav', email: 'bizimmanav@demo.arti.dev', type: 'manav', folder: '6a5d56e6809c4707359a9c83',
+    { name: 'Bizim Manav', email: 'bizimmanav@demo.arti.dev', type: 'manav', folder: '6a5d56e6809c4707359a9c83', id: 'a17100000000000000000005',
       cover: 'cover-40bcbc3801e23066.jpg', logo: 'logo-d4398e29c29512ca.jpg', coords: [29.0250, 40.9880],
       base: 60, orig: 180, contents: ['manav'], stock: 8, remaining: 2, start: '19:00', end: '21:00',
       desc: 'Mahallenin manavı — mevsim meyveleri ve yeşillikler karışık kutuda.' },
-    { name: 'Deniz Restoran', email: 'deniz@demo.arti.dev', type: 'restoran', folder: '6a5d56e6809c4707359a9c84',
+    { name: 'Deniz Restoran', email: 'deniz@demo.arti.dev', type: 'restoran', folder: '6a5d56e6809c4707359a9c84', id: 'a17100000000000000000006',
       cover: 'cover-fd1af1889f63a25d.jpg', logo: 'logo-a1f0fb624f4bb96f.png', coords: [29.0360, 40.9775],
       base: 200, orig: 550, contents: ['sicak', 'sandvic'], stock: 8, remaining: 5, start: '21:00', end: '22:30',
       desc: 'Deniz kenarında sıcak yemek ve mezeler. Servis sonu kalanları kutuda.' },
-    { name: 'Köşe Şarküteri', email: 'kose@demo.arti.dev', type: 'market', folder: '6a5d56e6809c4707359a9c85',
+    { name: 'Köşe Şarküteri', email: 'kose@demo.arti.dev', type: 'market', folder: '6a5d56e6809c4707359a9c85', id: 'a17100000000000000000007',
       cover: 'cover-efcddc585e62adc3.jpg', logo: 'logo-8dbf6811d856a403.png', coords: [29.0280, 40.9910],
       base: 90, orig: 250, contents: ['sarkuteri', 'et'], stock: 8, remaining: 5, start: '18:30', end: '20:30',
       desc: 'Şarküteri ürünleri ve hazır yemekler. Gün sonu ürünleri uygun fiyata.' },
@@ -112,6 +118,7 @@ async function main() {
   for (const s of SHOPS) {
     const loc = pt(s.coords[0], s.coords[1]);
     const biz = await Business.create({
+      _id: oid(s.id),
       ...ortak, name: s.name, email: s.email, businessType: s.type, status: 'APPROVED',
       description: s.desc, boxContents: s.contents, location: loc,
       defaultPackageCount: s.stock, defaultPrice: s.base, defaultOriginalPrice: s.orig,
