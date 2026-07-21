@@ -118,8 +118,12 @@ const businessSchema = new mongoose.Schema({
   // Desk360 WhatsApp otomasyonu (PLAN.md §3.4) — admin panelden eşlenir
   desk360ChatId: { type: String, trim: true, index: true, sparse: true },
   whatsappPhone: { type: String, trim: true },
-  // Cevapsız-işletme fallback yayını için varsayılanlar; fiyatlar tanımlı
-  // değilse otomatik yayın yapılmaz, mesaj admin onayına düşer
+  // Günlük otomatik yayın: açıksa sistem her gün defaultPackageCount kadar kutuyu
+  // şablondan otomatik yayınlar (işletme her gün tek tek girmez). WhatsApp yalnızca
+  // EKSTRA kutu sorar; gelen sayı bu temel adede eklenir.
+  autoPublish: { type: Boolean, default: true },
+  // Günlük yayınlanan temel kutu adedi + fiyat şablonu. defaultOriginalPrice >
+  // defaultPrice değilse otomatik yayın yapılmaz.
   defaultPackageCount: { type: Number, min: 0 },
   defaultPrice: { type: Number, min: 1 },
   defaultOriginalPrice: { type: Number, min: 1 },

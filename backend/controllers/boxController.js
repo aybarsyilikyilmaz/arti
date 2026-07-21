@@ -9,9 +9,12 @@ exports.upsertTodayBox = async (req, res, next) => {
   try {
     const business = req.business; // requireApprovedBusiness doldurur
     const date = todayIstanbul();
-    const { basePrice, originalPrice, initialStock, contents, pickupStart, pickupEnd } = req.body;
+    const { basePrice, originalPrice, initialStock, contents, pickupStart, pickupEnd, autoPublish } = req.body;
     const rate = await getMarkupRate();
     const price = Math.round(basePrice * (1 + rate / 100));
+
+    // Günlük otomatik yayın tercihi (şablonla birlikte kaydedilir; iki dalda da save edilir)
+    if (autoPublish !== undefined) business.autoPublish = autoPublish;
 
     const existing = await SurpriseBox.findOne({ business: business._id, date });
     if (existing) {

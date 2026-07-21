@@ -148,4 +148,42 @@ async function sweepFallback() {
   return published;
 }
 
-module.exports = { sweepOutreach, sweepFallback, applyReply, applyCount, parseCount };
+// Günlük otomatik yayın: autoPublish açık ve fiyat/adet şablonu tanımlı her onaylı
+// işletme için bugünün kutusunu erkenden (pickup beklemeden) açar. İşletme her gün
+// tek tek girmez; WhatsApp yalnızca EKSTRA sorar, gelen sayı bu adede eklenir.
+// İdempotent: kutu zaten varsa dokunmaz (işletmenin canlı düzenlemesini ezmez).
+async function publishDailyBoxes() {
+  const date = todayIstanbul();
+  const candidates = await Business.find({
+    status: 'APPROVED',
+    autoPublish: { $ne: false },
+    defaultPackageCount: { $gt: 0 },
+  });
+
+  let published = 0;
+  for (const business of candidates) {
+    if (!hasPublishDefaults(business)) continue;
+
+    const exists = await SurpriseBox.findOne({ business: business._id, date }).select('_id');
+    if (exists) continue;
+
+    let created;
+    try {
+      created = await SurpriseBox.create({
+        ...boxDefaults(business),
+        initialStock: business.defaultPackageCount,
+        remaining: business.defaultPackageCount,
+      });
+    } catch (err) {
+      if (err.code === 11000) continue; // yarışta başka süreç yayınladı
+      throw err;
+    }
+    require('./notificationService').notifyBoxPublishedSafe(business, created);
+    published += 1;
+  }
+
+  if (published > 0) logger.info({ published }, 'Günlük kutular otomatik yayınlandı');
+  return published;
+}
+
+module.exports = { sweepOutreach, sweepFallback, publishDailyBoxes, applyReply, applyCount, parseCount };

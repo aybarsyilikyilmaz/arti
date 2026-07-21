@@ -13,6 +13,7 @@ const upsertBoxSchema = z
       .max(2, 'Uygulamada karışık görünmemesi için en fazla 2 içerik seçilebilir.'),
     pickupStart: z.string().regex(TIME_RE, 'Saat SS:DD biçiminde olmalı.'),
     pickupEnd: z.string().regex(TIME_RE, 'Saat SS:DD biçiminde olmalı.'),
+    autoPublish: z.boolean().optional(),
   })
   .refine((d) => d.basePrice < d.originalPrice, {
     message: 'İndirimli fiyat normal fiyattan düşük olmalı.',

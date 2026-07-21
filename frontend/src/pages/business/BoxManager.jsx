@@ -26,7 +26,7 @@ export default function BoxManager() {
   const [saving, setSaving] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [form, setForm] = useState({
-    basePrice: '', originalPrice: '', initialStock: '', contents: [], pickupStart: '', pickupEnd: '',
+    basePrice: '', originalPrice: '', initialStock: '', contents: [], pickupStart: '', pickupEnd: '', autoPublish: true,
   });
 
   // QR doğrulama durumu
@@ -45,6 +45,7 @@ export default function BoxManager() {
           contents: b?.contents?.length ? b.contents : (me?.boxContents || []),
           pickupStart: b?.pickupStart || me?.pickupStart || '18:00',
           pickupEnd: b?.pickupEnd || me?.pickupEnd || '21:00',
+          autoPublish: me?.autoPublish !== false,
         });
       })
       .catch((err) => push(apiErrorMessage(err, 'Kutu bilgisi alınamadı.'), 'error'))
@@ -79,6 +80,7 @@ export default function BoxManager() {
         contents: form.contents,
         pickupStart: form.pickupStart,
         pickupEnd: form.pickupEnd,
+        autoPublish: form.autoPublish,
       });
       setBox(saved);
       push(box ? 'Kutu güncellendi.' : 'Bugünün kutusu yayınlandı! Favorileyen müşterilere bildirim gitti.');
@@ -137,6 +139,24 @@ export default function BoxManager() {
             <div className="flex justify-center py-16"><Spinner className="h-7 w-7" /></div>
           ) : (
             <form onSubmit={submit} className="space-y-4">
+              {/* Günlük otomatik yayın anahtarı */}
+              <label className="flex items-center justify-between gap-3 rounded-xl border border-emerald-100 bg-emerald-50/50 px-4 py-3">
+                <div>
+                  <span className="text-sm font-semibold text-gray-900">Her gün otomatik yayınla</span>
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-gray-500">
+                    Açıkken sistem her gün bu şablondan <b>{form.initialStock || '—'}</b> kutu açar — her gün tek tek girmene gerek kalmaz.
+                    WhatsApp yalnızca <b>ekstra</b> kutu sorar; verdiğin sayı bu adede eklenir.
+                  </p>
+                </div>
+                <button
+                  type="button" role="switch" aria-checked={form.autoPublish}
+                  onClick={() => setForm((f) => ({ ...f, autoPublish: !f.autoPublish }))}
+                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-300 ${form.autoPublish ? 'bg-emerald-600' : 'bg-gray-300'}`}
+                >
+                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-300 ${form.autoPublish ? 'left-[22px]' : 'left-0.5'}`} />
+                </button>
+              </label>
+
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                 <label className="block">
                   <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-gray-400">İşletme Hakedişi (₺)</span>
@@ -151,7 +171,7 @@ export default function BoxManager() {
                     className={`admin-no-spinner ${inputCls}`} placeholder="500" />
                 </label>
                 <label className="col-span-2 block sm:col-span-1">
-                  <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-gray-400">Kutu Adedi</span>
+                  <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-gray-400">Günlük Kutu Adedi</span>
                   <input type="number" min="1" max="200" required value={form.initialStock}
                     onChange={(e) => setForm((f) => ({ ...f, initialStock: e.target.value }))}
                     className={`admin-no-spinner ${inputCls}`} placeholder="5" />

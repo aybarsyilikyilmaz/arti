@@ -9,6 +9,9 @@ const outreachService = require('./outreachService');
 
 const JOBS = [
   { name: 'expire-orders', everyMs: 60 * 1000, handler: () => orderService.expireStaleReservations() },
+  // Günlük otomatik yayın: her gün temel kutuları şablondan açar (idempotent).
+  // Sık ve ucuz çalışır; gün dönünce ilk tetikte o günün kutuları oluşur.
+  { name: 'daily-publish', everyMs: 15 * 60 * 1000, handler: () => outreachService.publishDailyBoxes() },
   { name: 'whatsapp-outreach', everyMs: 5 * 60 * 1000, handler: () => outreachService.sweepOutreach() },
   { name: 'fallback-publish', everyMs: 5 * 60 * 1000, handler: () => outreachService.sweepFallback() },
 ];
@@ -75,14 +78,21 @@ function startIntervals() {
 }
 
 async function startSchedulers() {
+  let ctrl;
   if (env.redisUrl) {
     try {
-      return await startBullMq();
+      ctrl = await startBullMq();
     } catch (err) {
       logger.error({ err }, 'BullMQ başlatılamadı — interval moduna düşülüyor');
     }
   }
-  return startIntervals();
+  ctrl = ctrl || startIntervals();
+
+  // Açılışta bugünün kutularını hemen yayınla (gece çalışmasını kaçırmış olsak bile
+  // sunucu ayağa kalkınca o günün kutuları hazır olur).
+  outreachService.publishDailyBoxes().catch((err) => logger.error({ err }, 'İlk günlük yayın hatası'));
+
+  return ctrl;
 }
 
 module.exports = { startSchedulers, redisPing };
