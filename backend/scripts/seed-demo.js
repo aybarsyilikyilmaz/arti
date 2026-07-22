@@ -156,19 +156,14 @@ async function main() {
   }
   await Order.insertMany(orders);
 
-  // Admin "İşletme Detay": 1 çalışan + 2 hakediş
+  // Admin "İşletme Detay": 1 çalışan.
+  // NOT: Hakediş (Payout) kayıtları seed'lenmez — hakediş geçmişi tamamen dinamiktir;
+  // gerçek ödeme yalnızca admin "Öde" dediğinde oluşur (createPayout). Böylece işletme
+  // panelindeki "Hakediş Geçmişi" sahte veri göstermez, boş başlar.
   await Employee.create({
     business: cevapsiz._id, allowedBranches: [cevapsiz._id], name: 'Demo Çalışan',
     email: 'calisan@demo.arti.dev', password: 'artidemo123', allowedPages: ['kutu', 'siparisler'],
   });
-  await Payout.create([
-    { business: cevapsiz._id, periodStart: new Date(Date.now() - 14 * gun), periodEnd: new Date(Date.now() - 7 * gun),
-      totalOrders: 9, netAmount: 1350, status: 'PAID', ibanUsed: 'TR33 0006 1005 1978 6457 8413 26',
-      ibanOwnerUsed: 'Simit Sarayı Gıda A.Ş.', payoutDate: new Date(Date.now() - 6 * gun) },
-    { business: cevapsiz._id, periodStart: new Date(Date.now() - 7 * gun), periodEnd: new Date(),
-      totalOrders: 12, netAmount: 1800, status: 'PENDING', ibanUsed: 'TR33 0006 1005 1978 6457 8413 26',
-      ibanOwnerUsed: 'Simit Sarayı Gıda A.Ş.' },
-  ]);
 
   // Yorum moderasyonu + puan demosu (teslim alınan siparişlere)
   const inserted = await Order.find({ business: cevapsiz._id, status: 'PICKED_UP' }).sort('createdAt').limit(3);
@@ -185,7 +180,7 @@ async function main() {
   console.log('  • 2 onay bekleyen işletme (Admin → İşletme Onayları)');
   console.log('  • İşletme paneli: simit@demo.arti.dev / artidemo123');
   console.log(`    → 7 güne yayılmış ${orders.length} sipariş, bugünün kutusu 8/3, 3 yorum (puan 3.3)`);
-  console.log('  • Admin → İşletme Detay: 1 çalışan + 2 hakediş + IBAN');
+  console.log('  • Admin → İşletme Detay: 1 çalışan + IBAN (hakediş geçmişi dinamik — boş başlar)');
   process.exit(0);
 }
 
