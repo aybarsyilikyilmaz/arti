@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const SurpriseBox = require('../models/SurpriseBox');
+const activityService = require('../services/activityService');
 const { getMarkupRate } = require('./settingsController');
 const { todayIstanbul } = require('../utils/time');
 
@@ -35,6 +36,12 @@ exports.upsertTodayBox = async (req, res, next) => {
       });
       await business.save();
 
+      activityService.log({
+        req, businessId: business._id, businessName: business.name, action: 'box.update',
+        message: `Günlük kutu şablonu güncellendi — adet: ${initialStock}, hakediş: ${basePrice}₺, teslim: ${pickupStart}-${pickupEnd}`,
+        meta: { basePrice, originalPrice, initialStock, contents, pickupStart, pickupEnd, autoPublish: business.autoPublish },
+      });
+
       return res.status(200).json({ status: 'success', data: { box: existing } });
     }
 
@@ -63,6 +70,12 @@ exports.upsertTodayBox = async (req, res, next) => {
       boxContents: contents,
     });
     await business.save();
+
+    activityService.log({
+      req, businessId: business._id, businessName: business.name, action: 'box.publish',
+      message: `Bugünün kutusu yayınlandı — adet: ${initialStock}, hakediş: ${basePrice}₺, teslim: ${pickupStart}-${pickupEnd}`,
+      meta: { basePrice, originalPrice, initialStock, contents, pickupStart, pickupEnd, autoPublish: business.autoPublish },
+    });
 
     // Favorileyen kullanıcılara uygulama içi bildirim (akışı asla kesmez)
     require('../services/notificationService').notifyBoxPublishedSafe(business, box);

@@ -6,7 +6,7 @@ import { NavLink, Outlet, Navigate, useNavigate, useLocation } from 'react-route
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Building2, ShoppingBag, Users, Banknote, Star,
-  MessageCircle, LogOut, ShieldCheck, LifeBuoy
+  MessageCircle, LogOut, ShieldCheck, LifeBuoy, Activity
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Spinner } from '../../components/admin/AdminUI';
@@ -18,6 +18,7 @@ const NAV = [
   { to: 'kullanicilar', label: 'Kullanıcılar', icon: Users },
   { to: 'finans', label: 'Finans & Hakediş', icon: Banknote },
   { to: 'yorumlar', label: 'Yorumlar', icon: Star },
+  { to: 'aktivite', label: 'Aktivite', icon: Activity },
   { to: 'destek', label: 'Destek', icon: LifeBuoy },
 ];
 

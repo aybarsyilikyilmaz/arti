@@ -10,6 +10,7 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminFinance from './pages/admin/AdminFinance';
 import AdminReviews from './pages/admin/AdminReviews';
+import AdminActivity from './pages/admin/AdminActivity';
 import BusinessLayout from './pages/business/BusinessLayout';
 import Overview from './pages/business/Overview';
 import OrdersPage from './pages/business/OrdersPage';
@@ -38,6 +39,7 @@ import FAQ from './components/FAQ';
 import DownloadCTA from './components/DownloadCTA';
 import Footer from './components/Footer';
 import About from './components/About';
+import BusinessInfo from './components/BusinessInfo';
 import BrandLogo from './components/BrandLogo';
 
 function HomePage() {
@@ -129,6 +131,7 @@ function App() {
           <Route path="kullanicilar" element={<AdminUsers />} />
           <Route path="finans" element={<AdminFinance />} />
           <Route path="yorumlar" element={<AdminReviews />} />
+          <Route path="aktivite" element={<AdminActivity />} />
           <Route path="destek" element={<AdminTickets />} />
         </Route>
         <Route path="/panel" element={<BusinessLayout />}>
@@ -190,7 +193,7 @@ function App() {
                     <span>Çevrendekiler</span>
                   </Link>
                   <Link to="/about" className={`${textColor} ${hoverColor} transition font-normal text-[15px] hidden md:block`}>Hakkımızda</Link>
-                  <Link to="/business" className={`${textColor} ${hoverColor} transition font-normal text-[15px] hidden md:block`}>İşletme</Link>
+                  <Link to="/isletme" className={`${textColor} ${hoverColor} transition font-normal text-[15px] hidden md:block`}>İşletme</Link>
                 </>
               )}
             </div>
@@ -229,6 +232,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/business" element={<BusinessAuth />} />
+            <Route path="/isletme" element={<BusinessInfo />} />
             <Route path="/about" element={<About />} />
           </Routes>
         </main>

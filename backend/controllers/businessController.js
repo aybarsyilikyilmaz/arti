@@ -1,6 +1,20 @@
 const Business = require('../models/Business');
 const tokenService = require('../services/tokenService');
+const activityService = require('../services/activityService');
 const { sha256 } = require('../utils/crypto');
+
+// Aktivite logunda alanların Türkçe okunuşu
+const FIELD_LABELS = {
+  // Operasyonel (direkt kaydolur, loglanır)
+  defaultPackageCount: 'günlük kutu adedi', defaultPrice: 'işletme hakedişi',
+  defaultOriginalPrice: 'normal değer', pickupStart: 'teslim başlangıç',
+  pickupEnd: 'teslim bitiş', boxContents: 'kutu içeriği', description: 'vitrin açıklaması',
+  // Kimlik/yasal/adres (onaya gider, loglanır)
+  name: 'işletme adı', branchName: 'şube adı', businessType: 'işletme türü', branchType: 'şube türü',
+  legalName: 'yasal unvan', taxOffice: 'vergi dairesi', taxNumber: 'vergi no',
+  mapsUrl: 'maps linki', address: 'adres', contactName: 'iletişim adı', contactRole: 'iletişim rolü',
+  email: 'e-posta', phone: 'telefon', whatsappPhone: 'whatsapp', contactPhone: 'iletişim telefonu',
+};
 
 // Oturum/şifre uçları, kimliği doğrulanan gerçek principal üzerinde çalışmalı:
 //   • Çalışan (employeeId var)  → kendi Employee dokümanı + rt_employee cookie
@@ -197,6 +211,15 @@ exports.updateProfile = async (req, res, next) => {
       runValidators: true,
     });
     if (!business) return res.status(404).json({ status: 'fail', message: 'İşletme bulunamadı.' });
+
+    const changed = Object.keys(update).map((k) => FIELD_LABELS[k] || k);
+    if (changed.length) {
+      activityService.log({
+        req, businessId: business._id, businessName: business.name, action: 'profile.update',
+        message: `Ayarlar güncellendi: ${changed.join(', ')}`, meta: { changes: update },
+      });
+    }
+
     res.status(200).json({ status: 'success', message: 'Ayarlar kaydedildi.', data: { business: business.toSafeJSON() } });
   } catch (err) {
     next(err);
@@ -208,10 +231,6 @@ exports.updateProfileRequest = async (req, res, next) => {
     const Business = require('../models/Business');
     const business = await Business.findById(req.auth.id);
     if (!business) return res.status(404).json({ status: 'fail', message: 'İşletme bulunamadı.' });
-
-    if (business.pendingUpdates) {
-      return res.status(400).json({ status: 'fail', message: 'Zaten onay bekleyen bir profil güncelleme talebiniz var.' });
-    }
 
     const ALLOWED = [
       'name', 'branchName', 'businessType', 'branchType', 'legalName', 'taxOffice', 'taxNumber',
@@ -228,8 +247,17 @@ exports.updateProfileRequest = async (req, res, next) => {
       return res.status(400).json({ status: 'fail', message: 'Değiştirilen bir bilgi bulunamadı.' });
     }
 
-    business.pendingUpdates = updateReq;
+    // Bekleyen bir talep (ör. IBAN) varsa üstüne EKLE, bloke etme — admin hepsini
+    // tek onayda görür. Böylece IBAN onay beklerken profil değişikliği yapılabilir.
+    business.pendingUpdates = { ...(business.pendingUpdates || {}), ...updateReq };
     await business.save();
+
+    const changed = Object.keys(updateReq).map((k) => FIELD_LABELS[k] || k);
+    activityService.log({
+      req, businessId: business._id, businessName: business.name, action: 'profile.request',
+      message: `Profil değişiklik talebi oluşturuldu (onaya gitti): ${changed.join(', ')}`,
+      meta: { changes: updateReq },
+    });
 
     res.status(200).json({ status: 'success', message: 'Profil güncelleme talebiniz yönetici onayına iletildi.', data: { business: business.toSafeJSON() } });
   } catch (err) {

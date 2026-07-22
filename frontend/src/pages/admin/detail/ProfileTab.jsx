@@ -15,6 +15,15 @@ const TYPE_OPTIONS = [
 ];
 const ROLE_OPTIONS = [['sahibi', 'İşletme Sahibi'], ['mudur', 'Müdür'], ['operasyon', 'Operasyon'], ['diger', 'Diğer']];
 
+// Bekleyen talep diff'inde ham anahtar yerine okunur etiket göster (IBAN dahil).
+const PENDING_LABELS = {
+  name: 'İşletme Adı', branchName: 'Şube Adı', businessType: 'İşletme Türü', branchType: 'Şube Türü',
+  legalName: 'Yasal Unvan', taxOffice: 'Vergi Dairesi', taxNumber: 'Vergi No', mapsUrl: 'Maps Linki',
+  address: 'Adres', contactName: 'İletişim Adı', contactRole: 'İletişim Rolü', email: 'E-posta',
+  phone: 'Telefon', whatsappPhone: 'WhatsApp', contactPhone: 'İletişim Telefonu',
+  iban: 'IBAN', ibanOwner: 'IBAN Alıcı Adı',
+};
+
 // PATCH'e girebilen alanlar (backend adminUpdateBusinessSchema ile birebir)
 const TEXT_KEYS = ['name', 'branchName', 'businessType', 'legalName', 'taxOffice', 'mersisNumber',
   'address', 'mapsUrl', 'phone', 'contactName', 'contactRole', 'contactPhone', 'whatsappPhone',
@@ -108,7 +117,7 @@ export default function ProfileTab({ business, reload, push }) {
           <div className="mb-4 space-y-2">
             {Object.entries(business.pendingUpdates).map(([key, val]) => (
               <div key={key} className="flex flex-col gap-1 rounded-lg border border-amber-100 bg-white px-3 py-2 text-sm">
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-amber-500">{key}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-amber-500">{PENDING_LABELS[key] || key}</span>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-gray-400 line-through">{String(business[key] ?? '—')}</span>
                   <span className="text-gray-400">→</span>

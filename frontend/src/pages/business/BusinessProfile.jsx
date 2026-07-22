@@ -48,8 +48,8 @@ export default function BusinessProfile() {
     if (isPending) return;
     setSaving(true);
     try {
-      const res = await businessService.updateProfileRequest(form);
-      push(res.message || 'Profil güncelleme talebiniz alındı.');
+      await businessService.updateProfileRequest(form);
+      push('Değişiklikleriniz alındı. Admin onayından geçtikten sonra yeniden yayına alınacaksınız.');
       reloadMe();
     } catch (err) {
       push(apiErrorMessage(err, 'Talep iletilemedi.'), 'error');

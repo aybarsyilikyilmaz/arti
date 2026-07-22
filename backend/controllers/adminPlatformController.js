@@ -8,6 +8,7 @@ const SurpriseBox = require('../models/SurpriseBox');
 const Ticket = require('../models/Ticket');
 const Payout = require('../models/Payout');
 const Review = require('../models/Review');
+const ActivityLog = require('../models/ActivityLog');
 const financeService = require('../services/financeService');
 const { todayIstanbul } = require('../utils/time');
 
@@ -358,6 +359,35 @@ exports.deleteReview = async (req, res, next) => {
     const review = await Review.findByIdAndDelete(req.params.id);
     if (!review) return res.status(404).json({ status: 'fail', message: 'Yorum bulunamadı.' });
     res.status(200).json({ status: 'success', message: 'Yorum silindi.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/* Aktivite logu: işletmelerin yaptığı değişiklikler (onay akışı değil, izleme).   */
+exports.listActivity = async (req, res, next) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = 30;
+    const filter = {};
+    if (req.query.business && mongoose.isValidObjectId(req.query.business)) {
+      filter.business = req.query.business;
+    }
+    // Önek eşleşmesi: 'profile' → profile.update + profile.request, 'iban' → iban.request, 'box' → box.*
+    if (req.query.action) {
+      const prefix = String(req.query.action).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      filter.action = { $regex: `^${prefix}` };
+    }
+
+    const [logs, total] = await Promise.all([
+      ActivityLog.find(filter).sort('-createdAt').skip((page - 1) * limit).limit(limit).lean(),
+      ActivityLog.countDocuments(filter),
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: { logs, pagination: { page, totalPages: Math.max(1, Math.ceil(total / limit)), total } },
+    });
   } catch (err) {
     next(err);
   }

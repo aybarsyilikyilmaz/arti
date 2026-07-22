@@ -41,7 +41,7 @@ export default function FinancePage() {
       setPayouts(payoutsData.payouts || []);
       setPagination(payoutsData.pagination || { page: 1, totalPages: 1, total: 0 });
     } catch (err) {
-      push({ type: 'error', title: 'Hata', desc: 'Finans bilgileri yüklenemedi.' });
+      push('Finans bilgileri yüklenemedi.', 'error');
     } finally {
       setLoading(false);
     }
@@ -51,12 +51,14 @@ export default function FinancePage() {
     e.preventDefault();
     setSavingIban(true);
     try {
-      const updated = await updateIban(ibanForm);
-      setOverview((prev) => ({ ...prev, iban: updated.iban, ibanOwner: updated.ibanOwner }));
+      const res = await updateIban(ibanForm);
+      const d = res.data || {};
+      // IBAN artık onaya gidiyor: mevcut IBAN değişmez, yeni değer "onay bekliyor" olarak görünür.
+      setOverview((prev) => ({ ...prev, iban: d.iban, ibanOwner: d.ibanOwner, pendingIban: d.pendingIban, pendingIbanOwner: d.pendingIbanOwner }));
       setIsEditingIban(false);
-      push({ type: 'success', title: 'Başarılı', desc: 'Banka bilgileri güncellendi.' });
+      push('IBAN değişikliğiniz alındı. Admin onayından geçtikten sonra yeniden yayına alınacaksınız.');
     } catch (err) {
-      push({ type: 'error', title: 'Hata', desc: 'Banka bilgileri güncellenirken bir hata oluştu.' });
+      push('Banka bilgileri güncellenirken bir hata oluştu.', 'error');
     } finally {
       setSavingIban(false);
     }
@@ -163,7 +165,14 @@ export default function FinancePage() {
                   <p className="text-xs font-medium uppercase tracking-wider text-gray-500">Alıcı Adı Soyadı</p>
                   <p className="mt-1 text-sm font-medium text-gray-900">{overview?.ibanOwner || <span className="text-gray-400 italic">Henüz girilmemiş</span>}</p>
                 </div>
-                {!overview?.iban && (
+                {(overview?.pendingIban || overview?.pendingIbanOwner) && (
+                  <div className="rounded-xl bg-amber-50 p-4 mt-4 border border-amber-200 text-sm text-amber-800 shadow-inner">
+                    <p className="font-semibold">Onay bekleyen değişiklik</p>
+                    <p className="mt-1 font-mono">{overview.pendingIban || overview.iban}{overview.pendingIbanOwner ? ` — ${overview.pendingIbanOwner}` : ''}</p>
+                    <p className="mt-1 text-xs text-amber-700">Güvenlik gereği IBAN değişikliği yönetici onayından sonra yürürlüğe girer.</p>
+                  </div>
+                )}
+                {!overview?.iban && !overview?.pendingIban && (
                   <div className="rounded-xl bg-orange-50 p-4 mt-4 border border-orange-100 text-sm text-orange-800 shadow-inner">
                     Ödemelerinizi alabilmek için lütfen geçerli bir banka hesabı ekleyin.
                   </div>

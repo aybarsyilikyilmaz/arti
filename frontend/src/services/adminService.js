@@ -117,3 +117,7 @@ export const deleteReview = (id) =>
 // ... mevcut dosyanın en altına eklenecek ...
 export const getPlatformSettings = () => api.get('/admin/settings').then(r => r.data);
 export const updatePlatformSettings = (markupRate) => api.patch('/admin/settings', { markupRate }).then(r => r.data);
+
+// Aktivite logu — işletme değişiklikleri (izleme)
+export const getActivity = (params) =>
+  api.get('/admin/activity', { params }).then((r) => r.data.data); // {logs, pagination}

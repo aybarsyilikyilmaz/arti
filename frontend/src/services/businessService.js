@@ -60,7 +60,7 @@ export const getPayouts = (page = 1) =>
   api.get('/business/finance/payouts', { params: { page } }).then((r) => r.data.data);
 
 export const updateIban = (data) =>
-  api.put('/business/finance/iban', data).then((r) => r.data.data);
+  api.patch('/business/finance/iban', data).then((r) => r.data);
 
 // Bildirimler
 export const getNotifications = () =>

@@ -63,6 +63,8 @@ router.get('/finance/overview', protect('admin'), adminPlatformController.financ
 router.post('/finance/payouts', protect('admin'), validateBody(createPayoutSchema), adminPlatformController.createPayout);
 router.get('/reviews', protect('admin'), validateQuery(listReviewsQuerySchema), adminPlatformController.listReviews);
 router.delete('/reviews/:id', protect('admin'), adminPlatformController.deleteReview);
+// Aktivite logu — işletme değişiklikleri (izleme; ?business= ile filtrelenebilir)
+router.get('/activity', protect('admin'), adminPlatformController.listActivity);
 // Bilet Yönetimi (Destek)
 router.get('/tickets', protect('admin'), adminTicketController.listTickets);
 router.get('/tickets/:id', protect('admin'), adminTicketController.getTicket);

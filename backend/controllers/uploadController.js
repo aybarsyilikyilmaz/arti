@@ -81,6 +81,12 @@ const applyImages = async (businessId, { logoUrl, coverUrl, detailUrl }, res) =>
 exports.setImages = async (req, res, next) => {
   try {
     await applyImages(req.auth.id, req.body, res);
+    const labels = { coverUrl: 'kapak', logoUrl: 'logo', detailUrl: 'detay' };
+    const parts = Object.keys(req.body || {}).map((k) => labels[k] || k);
+    require('../services/activityService').log({
+      req, businessId: req.auth.id, action: 'images.update',
+      message: `Vitrin görselleri güncellendi${parts.length ? ` (${parts.join(', ')})` : ''}`,
+    });
   } catch (err) {
     next(err);
   }
