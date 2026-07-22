@@ -9,8 +9,10 @@ const env = require('../config/env');
 const { sha256 } = require('../utils/crypto');
 
 const COOKIE_NAMES = { user: 'rt_user', business: 'rt_business', admin: 'rt_admin', employee: 'rt_employee' };
+const DEVICE_COOKIE = 'arti_device'; // Kalıcı tarayıcı kimliği — aynı cihaz oturumu çoğaltmaz
 const MAX_SESSIONS = 5; // En fazla 5 aktif oturum
 const MAX_DEVICE_INFO = 255; // User-Agent'ı sınırla (kötü niyetli dev header'a karşı)
+const DEVICE_TTL_MS = 400 * 24 * 60 * 60 * 1000; // ~400 gün (tarayıcı çerez üst sınırı)
 
 function signAccessToken(id, role, payloadExtras = {}) {
   return jwt.sign({ sub: String(id), role, ...payloadExtras }, env.jwtSecret, { expiresIn: env.accessTokenTtl });
@@ -35,21 +37,38 @@ async function issueRefreshToken(req, doc) {
   const raw = crypto.randomBytes(48).toString('hex');
   const hashed = sha256(raw);
 
+  // Kalıcı cihaz çerezi varsa aynı deviceId'yi kullan; aynı tarayıcıdan tekrar giriş
+  // (ya da şube değiştir) yeni "cihaz" açmaz, mevcut oturumu değiştirir.
+  const deviceId = req?.cookies?.[DEVICE_COOKIE] || crypto.randomBytes(16).toString('hex');
+
   const now = new Date();
   const newSession = {
     refreshTokenHash: hashed,
-    deviceId: crypto.randomBytes(16).toString('hex'),
+    deviceId,
     ...extractDevice(req),
     createdAt: now,
     lastActiveAt: now
   };
 
+  // Bu cihaza ait eski oturumu kaldır (dedup), sonra tazesini ekle. İki ayrı update:
+  // aynı dizi alanında $pull + $push tek işlemde yapılamaz.
+  await doc.constructor.updateOne({ _id: doc._id }, { $pull: { sessions: { deviceId } } });
   await doc.constructor.updateOne(
     { _id: doc._id },
     { $push: { sessions: { $each: [newSession], $sort: { lastActiveAt: -1 }, $slice: MAX_SESSIONS } } }
   );
 
-  return raw;
+  return { raw, deviceId };
+}
+
+function setDeviceCookie(res, deviceId) {
+  res.cookie(DEVICE_COOKIE, deviceId, {
+    httpOnly: true,
+    secure: env.isProd,
+    sameSite: 'strict',
+    maxAge: DEVICE_TTL_MS,
+    path: '/api/v1',
+  });
 }
 
 function setRefreshCookie(res, role, rawToken) {
@@ -66,10 +85,11 @@ function clearRefreshCookie(res, role) {
   res.clearCookie(COOKIE_NAMES[role], { path: '/api/v1' });
 }
 
-// Ortak login cevabı: access token + refresh cookie
+// Ortak login cevabı: access token + refresh cookie + kalıcı cihaz çerezi
 async function issueSession(req, res, doc, role, payloadExtras = {}) {
-  const raw = await issueRefreshToken(req, doc);
+  const { raw, deviceId } = await issueRefreshToken(req, doc);
   setRefreshCookie(res, role, raw);
+  setDeviceCookie(res, deviceId);
   return signAccessToken(doc._id, role, payloadExtras);
 }
 
